@@ -1,5 +1,6 @@
 # Gluster operator for Kubernetes and OpenShift
 
+[![Build Status](https://travis-ci.org/gluster/anthill.svg?branch=master)](https://travis-ci.org/gluster/anthill)
 <!-- Badges: TravisCI, CentOS CI, Coveralls, GoDoc, GoReport, ReadTheDocs -->
 
 **Found a bug?** [Let us know.](https://github.com/gluster/operator/issues/new?template=bug_report.md)
