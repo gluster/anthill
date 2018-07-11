@@ -15,4 +15,4 @@ jobs:
       install:
         - gem install asciidoctor mdl
         - pip install yamllint
-      script: scripts/pre-commit.sh
+      script: scripts/pre-commit.sh --require-all

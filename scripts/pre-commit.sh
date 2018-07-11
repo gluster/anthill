@@ -1,6 +1,9 @@
 #! /bin/bash
 # vim: set ts=4 sw=4 et :
 
+# Usage: pre-commit.sh [--require-all]
+#   --require-all  Fail instead of warn if a checker is not found
+
 set -e
 
 # Run checks from root of the repo
@@ -17,11 +20,18 @@ function run_check() {
     if [ -x "$(command -v "$exe")" ]; then
         find . -regextype egrep -iregex "$regex" -print0 | \
             xargs -0rt -n1 "$exe" "$@"
-    else
+    elif [ "$all_required" -eq 0 ]; then
         echo "Warning: $exe not found... skipping some tests."
+    else
+        echo "FAILED: All checks required, but $exe not found!"
+        exit 1
     fi
 }
 
+all_required=0
+if [ "x$1" == "x--require-all" ]; then
+    all_required=1
+fi
 
 # Install via: gem install asciidoctor
 run_check '.*\.adoc' asciidoctor -o /dev/null -v --failure-level WARN
