@@ -1,0 +1,18 @@
+---
+sudo: false
+
+addons:
+  apt:
+    packages:
+      - realpath
+      - ruby
+
+jobs:
+  include:
+    - stage: linters
+      name: pre-commit linter
+      language: python
+      install:
+        - gem install asciidoctor mdl
+        - pip install yamllint
+      script: scripts/pre-commit.sh --require-all
