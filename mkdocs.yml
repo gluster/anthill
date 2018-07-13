@@ -1,0 +1,12 @@
+---
+
+# Configuration options: https://www.mkdocs.org/user-guide/configuration/
+
+site_name: "Anthill"
+site_description: "A Kubernetes/OpenShift operator to manage Gluster clusters"
+repo_url: "https://github.com/gluster/anthill/"
+edit_uri: "blob/master/docs/"
+# readthedocs.org supports only mkdocs or readthedocs themes
+theme: "mkdocs"
+# Broken documentation links break the build
+strict: true

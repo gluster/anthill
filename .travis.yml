@@ -16,3 +16,9 @@ jobs:
         - gem install asciidoctor mdl
         - pip install yamllint
       script: scripts/pre-commit.sh --require-all
+    - stage: linters
+      name: Documentation linter
+      language: python
+      install:
+        - pip install mkdocs
+      script: mkdocs build
