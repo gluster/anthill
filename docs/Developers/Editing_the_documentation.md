@@ -36,13 +36,12 @@ view the documentation by pointing your browser at:
 The placement of the markdown files and how they are named affect the layout of
 the documentation site. Some things to keep in mind:
 
-- The menu bar across the top has an entry for each markdown file in the top
-  `/docs` directory. It also has a drop-down for each directory that contains
-  markdown files.
-- Menus (top and dropdown) are sorted alphabetically by the name of the file.
-- File names become the entries in the menus. Case is preserved, and
+- The outline in the sidebar follows the structure of the `/docs` directory
+  tree.
+- The outline is sorted alphabetically by the name of the file.
+- File names become the entries in the sidebar. Case is preserved, and
   underscores become spaces.
-- Each page has its outline displayed on the left.
+- Each page has its outline displayed when selected.
 - Links within the documentation should be relative links to the `*.md` source
   file. The documentation builder will make it point to the correct place.
 
