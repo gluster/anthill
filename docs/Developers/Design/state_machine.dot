@@ -1,0 +1,28 @@
+# dot -Tpng -O <this_file>
+
+digraph G {
+  fontname="helvetica"
+  label="State machine transition diagram"
+
+  edge [
+    dir = both
+    fontname="helvetica"
+  ]
+
+  node [
+    fontname="helvetica"
+    shape = "rect"
+  ]
+
+  online -> offline
+  online -> quiesced
+  offline -> quiesced
+  offline -> failed [dir = forward]
+  online -> failed [dir = forward]
+  quiesced -> failed [dir = forward]
+  failed -> abandoned [dir = forward]
+
+  abandoned [shape="oval"]
+
+  { rank = same; offline; quiesced }
+}
