@@ -1,5 +1,3 @@
-# Editing the documentation
-
 The documentation resides in the main Anthill repo, under the `/docs`
 directory as a set of markdown files.
 
@@ -10,7 +8,7 @@ If you are making changes to the documentation or its configuration, you
 probably want to edit and view your changes locally. This can be done
 relatively easily using `mkdocs`.
 
-## Building locally
+# Building locally
 
 The mkdocs tool can be installed via pip:
 
@@ -31,7 +29,7 @@ By default, this will start a web server on your local machine, allowing you to
 view the documentation by pointing your browser at:
 [https://localhost:8000](https://localhost:8000)
 
-## Documentation hints
+# Documentation hints
 
 The placement of the markdown files and how they are named affect the layout of
 the documentation site. Some things to keep in mind:
@@ -42,6 +40,9 @@ the documentation site. Some things to keep in mind:
 - File names become the entries in the sidebar. Case is preserved, and
   underscores become spaces.
 - Each page has its outline displayed when selected.
+- Don't repeat the document "title" aka file name at the top of the document
+  (as seems to be common practice), otherwise there will be redundant headers
+  in the sidebar.
 - Links within the documentation should be relative links to the `*.md` source
   file. The documentation builder will make it point to the correct place.
 

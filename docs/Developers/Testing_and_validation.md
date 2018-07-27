@@ -1,8 +1,6 @@
-# Testing and validation
-
 This page provides an overview of the project's testing infrastructure.
 
-## Git pre-commit hook
+# Git pre-commit hook
 
 The scripts directory has a script that can be used as a git pre-commit hook to
 lint your files prior to committing. While this is totally optional, our CI
@@ -37,7 +35,7 @@ cd .git/hooks
 ln -s ../../scripts/pre-commit.sh pre-commit
 ```
 
-## CI infrastructure
+# CI infrastructure
 
 The project makes use of Travis CI for linting (and soon, unit testing).
 
