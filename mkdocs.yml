@@ -7,6 +7,7 @@ site_description: "A Kubernetes/OpenShift operator to manage Gluster clusters"
 repo_url: "https://github.com/gluster/anthill/"
 edit_uri: "blob/master/docs/"
 # readthedocs.org supports only readthedocs theme
-theme: "readthedocs"
+theme:
+  name: "readthedocs"
 # Broken documentation links break the build
 strict: true
