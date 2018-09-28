@@ -1,0 +1,36 @@
+# dot -Tpng -O <this_file>
+
+digraph {
+  label="Hierarchy of Gluster custom resources"
+  fontname="helvetica"
+  nodesep=1.0
+
+  //All nodes will this shape and colour
+  node [
+    shape=rect
+    fontname="helvetica"
+  ]
+
+  //All the lines look like this
+  edge [
+    dir=forward
+    fontname="helvetica"
+  ]
+
+  c1 [label="Cluster: my-cluster"]
+  z1 [label="Zone: az1"]
+  z2 [label="Zone: az2"]
+  n11 [label="Node: az1-1"]
+  n12 [label="Node: az1-2"]
+  n21 [label="Node: az2-1"]
+  n22 [label="Node: az2-2"]
+  n23 [label="Node: az2-3"]
+
+  c1->z1
+  c1->z2
+  z1->n11
+  z1->n12
+  z2->n21
+  z2->n22
+  z2->n23
+}
