@@ -15,20 +15,23 @@ capabilities of the operator differ significantly between these two modes of
 deployment, but the same set of CRDs should be used for both where possible.
 
 A given Gluster cluster is defined by several different Custom Resources (CRs)
-that form a hierarchy. At the top level is the "cluster" CR that describes
-cluster-wide configuration options such as the "name" for the cluster, the TLS
-credentials that will be used for securing communication, and peer clusters for
-geo-replication.
+that form a hierarchy. At the top level is the "cluster" CR (`GlusterCluster`)
+that describes cluster-wide configuration options such as the "name" for the
+cluster, the TLS credentials that will be used for securing communication, and
+peer clusters for geo-replication.
 
-Below the cluster level are zone definitions. These describe the different
-failure domains that the Gluster servers are spread across. This definition
-describes how pods in the zone should be created (for converged deployments) or
-where (DNS name) to find existing nodes (for independent mode).
+Incorporated into the cluster definition are a number of node definition
+templates. These describe the different configurations of nodes that the
+operator can create and how those nodes are spread across failure domains. Only
+nodes that use PersistentVolumes for their storage can be created via template.
+Other node types must be created manually. This includes both converged nodes
+that use local devices (directly accessing the `/dev/...` tree) and independent
+nodes that reside on external servers.
 
-Below the zone definitions are individual node definitions that track the state
-of the individual Gluster pods. Manipulating these objects permits an
-administrator to place a node into a "quiesced" state for maintenance or
-decommission it entirely.
+Below the cluster definition are node definitions (`GlusterNode`) that track
+the state of the individual Gluster pods. Manipulating these objects permits an
+administrator to place a node into a "disabled" state for maintenance or to
+decommission it entirely (by deleting the node object).
 
 ![Hierarchy of Gluster custom resources](crd_hierarchy.dot.png)
 
@@ -43,24 +46,33 @@ shown below:
 
 ```yaml
 apiVersion: "operator.gluster.org/v1alpha1"
-kind: Cluster
+kind: GlusterCluster
 metadata:
   # Name for the Gluster cluster that will be created by the operator
   name: my-cluster
-  # CRD is namespaced
+  # CR is namespaced
   namespace: gcs
 spec:
   # Cluster options allows setting "gluster vol set" options that are
   # cluster-wide (i.e. don't take a volname argument).
   clusterOptions:  # (optional)
     "cluster.halo-enabled": "yes"
+  # Drivers lists the CSI drivers that should be deployed for use with this
+  # cluster
+  drivers:
+    - gluster-fuse
+    - gluster-block
   # Gluster CA to use for generating Gluster TLS keys.
   # Contains Secret w/ CA key & cert
-  glusterCA: ca-secret
+  glusterCA:  # (optional)
+    secretName: my-secret
+    secretNamespace: my-ns  # default is metadata.namespace
   # Georeplication
   replication:  # (optional)
     # Credentials for using this cluster as a target
-    credentials: secretRef
+    credentials:
+      secretName: my-secret
+      secretNamespace: my-ns  # default is metadata.namespace
     targets:
       # Each target has a name that can be used in the StorageClass
       - name: foo
@@ -69,19 +81,44 @@ spec:
           - 1.1.1.1
           - my.dns.com
         # Credentials for setting up session (ssh user & key)
-        credentials: SecretRef
+        credentials:
+          secretName: my-secret
+          secretNamespace: my-ns  # default is metadata.namespace
+  # Only PV-based nodes are built from templates
+  nodeTemplates:  # (optional)
+    - name: myTemplate
+      # Zone is the "failure domain"
+      zone: my-zone  # default is .nodeTemplates.name
+      thresholds:
+        nodes: 7  # may only be specified if other fields are absent
+        minNodes: 3
+        maxNodes: 42
+        freeStorageMin: 1Ti
+        freeStorageMax: 3Ti
+      nodeAffinity:  # (optional)
+        # https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+        # Would include "zone"-level affinity
+        # Operator will overlay best-effort pod anti-affinity
+        ...
+      storage:
+        storageClassName: my-sc
+        capacity: 1Ti
 status:
   # TBD operator state
+  ...
 ```
 
 All CRs live within the `operator.gluster.org` group and have version
 `v1alpha1`. The cluster `my-cluster`, above would be contained within the `gcs`
 namespace. All components of the Gluster cluster would be expected to exist
-within a single namespace. The `spec` field provides the main configuration
+within this single namespace. The `spec` field provides the main configuration
 options.
 
 The `clusterOptions` section are Gluster options (i.e., normally manipulated
 via ithe cli `gluster vol set`) that do not take a volume parameter.
+
+The `drivers` list provides the list of CSI drivers that will be deployed by
+the operator for use with this Gluster cluster.
 
 The `glusterCA` field holds a reference to a Kubernetes Secret containing the
 certificate authority `.key` and `.pem` files from which both client and server
@@ -97,154 +134,135 @@ are presented as a list in `replication.targets`, providing a `name` for each
 remote cluster, the address(es) via `address`, and the ssh credentials via the
 `credentials` field.
 
-## Zone CR
+The `nodeTemplates` list provides a set of templates that the operator can use
+to automatically scale the Gluster cluster as required and to automatically
+replace failed storage nodes.
 
-The `Zone` CR is used to define a failure domain. There would be at least one
-of these associated with a Gluster cluster. The purpose is to define how the
-operator can create new Gluster nodes within the failure domain and the rules
-for doing so. Additionally, it provides a name for the domain so that it can be
-referenced in the StorageClass to control volume placement and spreading.
+Within this template, there is a `zone` tag that allows the nodes cretaed from
+this template to be assigned to a specific failure domain. The default is to
+have the zone name equal to the template name. These zones can then be used to
+direct storage placement by referencing them in the StorageClass. Unless
+otherwise specified, volumes will be created with bricks from different zones.
 
-```yaml
-apiVersion: "operator.gluster.org/v1alpha1"
-kind: Zone
-metadata:
-  # Name for this zone
-  name: az1
-  # Zones are cluster-specific
-  cluster: my-cluster
-  # CRD is namespaced
-  namespace: gcs
-spec:
-  management:
-    # How the zone is managed
-    mode: automatic # (automatic | external | manual)
-    automatic:  # (iff mode==automatic)
-      # Minimum Gluster pods
-      minNodes: 1
-      # Maximum Gluster pods
-      maxNodes: 99
-      # Maximum raw storage capacity (South) in this zone
-      maxStorage: 100Ti
-      # Min unallocated capacity in the zone
-      freeStorageMin: 1Ti
-      # Max unallocated capacity in the zone
-      freeStorageMax: 3Ti
-    external:  # (iff mode==external)
-      nodes:
-        - 1.2.3.4
-        - some.node.net
-      # Credentials for connecting to external nodes (ssh user & key)
-      credentials: SecretRef
-    manual:  # (iff mode==manual)
-      nodes: 2
-  nodeAffinity: # https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
-    requiredDuringSchedulingIgnoredDuringExecution:
-      nodeSelectorTerms:
-        - matchExpressions:
-          - key: failure-domain.beta.kubernetes.io/zone
-            operator: In
-            values:
-              - us-east-2a
-  storage:
-    # Whether to use block-mode PVs or raw /dev devices
-    # mode==device will cause /dev to be added to the PodSpec as a
-    # hostPath mount
-    mode: device # (device | volume)
-    # In device mode, the pod would use the entire device(s) as a single VG
-    device:  # (iff mode==device)
-      - /dev/sdb
-      - /dev/sdc
-    volume:  # (iff mode==volume)
-      size: 500Gi
-      storageClassName: my-az1-class
-status:
-  # TBD operator state
-```
+The `thresholds` block places limits on the amount that the operator can scale
+each template up or down. Additionally, it provides thresholds to determine
+when scaling should be invoked. The template can have a fixed (constant) number
+of nodes by setting `nodes` to the desired value. The operator can also
+dynamically size the template if, instead of setting `nodes`, the `minNodes`,
+`maxNodes`, `freeStorageMin`, and `freeStorageMax` are configured. In this
+case, the number of stroage nodes always remains between the min and max, and
+scaling within that range is triggered based on the amount of free storage (not
+assigned to a brick) exists across the nodes in that template.
 
-A `Zone` definition points to its parent cluster, `metadata.cluster`, and must
-reside in the same namespace thereof (`metadata.namespace`).
+Each template is likely to have a `nodeAffinity` entry to guide the placement
+of the Gluster pods to a single failure domain within the cluster.
 
-The `spec.management` sub-tree determines how Gluster nodes within this zone
-are managed. `management.mode` chooses one of the three possible management
-modes:
-
-- `automatic`: When in automatic mode, the operator adds and removes Gluster
-  pods as needed for capacity and performance reasons, subject to the
-  restrictions listed in `management.automatic.*`. These restrictions take the
-  form of constraining the total number of pods between a minimum and maximum
-  (`minNodes` and `maxNodes`), limiting the maximum amount of raw capacity that
-  can be allocated (`maxStorage`), and providing capacity thresholds for the
-  operator to use when dynamically adjusting the number of pods
-  (`freeStorageMin`, `freeStorageMax`).
-- `external`: The external mode is used when the zone represents nodes that are
-  not part of the kubernetes cluster (i.e., Gluster servers running in
-  "independent" mode). In this mode, the `management.external.*` subtree is
-  used. Here, `external.nodes` provides a list of the IP/DNS addresses of the
-  individual cluster nodes in this zone. It is also possible to supply ssh
-  credentials via `external.credentials` for use by Heketi's ssh executor to
-  contact glusterd.
-- `manual`: The manual mode is used as an alternative to the automatic mode,
-  when it is desirable to directly specify the number of storage nodes within a
-  zone. The number is directly set via `manual.nodes`.
-
-The `spec.nodeAffinity`, applicable to both automatic and manual mode, is used
-to constrain which nodes the Gluster pods may be placed on. The structure of
-this field directly mirrors the Kubernetes pod's `spec.affinity.nodeAffinity`.
-
-The final section of the Zone spec is the `storage` sub-tree. This set of
-parameters determines how the storage for the pods in this zone are obtained.
-There are two main modes:
-
-- `device` mode: In this mode, the physical devices on the host are listed
-  here, and the pod is given direct access to the host's physical disks. The
-  `storage.device` list provides the device names that should be used.
-- `volume` mode: In this mode, block-mode PVs are assigned to the Gluster pods.
-  The `storage.volume.size` and `storage.volume.storageClassName` provide the
-  information necessary to obtain PersistentVolumes for use in this zone.
+The `storage` block defines how the backing storage for the templated nodes are
+created. This includes the name of a StorageClass that can be used to allocate
+block-mode PVs, and the capacity that should be requested from this class.
 
 ## Node CR
 
-The Node CR's usage is slightly different than the Cluster and Zone objects.
-The Cluster and Zone objects are created by the administrator when configuring
-the cluster, but the Node objects are created and deleted dynamically by the
-operator.
+The Node CR defines a single Gluster server that is a part of the cluster.
+These node objects can either be created automatically by the operator from a
+template or they can be manually created.
 
 ```yaml
 apiVersion: "operator.gluster.org/v1alpha1"
-kind: Node
+kind: GlusterNode
 metadata:
   # Name for this node
   name: az1-001
+  # CRD is namespaced
+  namespace: gcs
+  annotations:
+    # Applied by operator when it creates/manages this object from a template.
+    # When this is present, contents will be dynamically adjusted accd to the
+    # template in the cluster CR.
+    # When this annotation is present, the admin may only modify
+    # .spec.desiredState or delete the CR. Any other change will be
+    # overwritten.
+    anthill.gluster.org/template: template-name
+spec:
+  # Nodes belong to a cluster
+  cluster: my-cluster
   # Nodes belong to a zone
   zone: az1
-  # Nodes belong to a cluster also
-  cluster: my-cluster
-  # CRD is namespaced
-  namespace: gluster
-spec:
   # Admin (or operator) sets desired state for the node.
-  targetState: active # (active | quiesce)
+  desiredState: enabled  # (enabled | disabled)
+  # Only 1 of external | storage
+  external:
+    address: my.host.com
+    credentials:
+      secretName: my-secret
+      secretNamespace: my-ns  # default is metadata.namespace
+  storage:
+    # Only 1 of device | pvcName
+    # Device names must to be stable on the host
+    - device: /dev/sd[b-d]
+      pvcName: my-pvc
+      tags: [tag1, tag2]
+  nodeAffinity:
+    # https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+    # For admin created GlusterNodes, this needs to specify a node selector
+    # that matches exactly one node. For template-based GNs, this will inherit
+    # from the template.
+    ...
 status:
   # TBD operator state
-  # Possible states: (active | deleting | quiesced)
-  currentState: active
+  # Possible states: (enabled | deleting | disabled)
+  currentState: enabled
 ```
 
 There will be one Node object for each Gluster node in the cluster. By
 manipulating this object, the administrator can perform a number of maintenance
-actions.
+actions:
 
-By deleting a given Node object, the administrator signals the operator that
-the corresponding Gluster node should be de-commissioned and removed from the
-cluster. In the case of a converged deployment, the resources of the
-corresponding pod would also be freed.
+- By deleting a given Node object, the administrator signals the operator that
+  the corresponding Gluster node should be de-commissioned and removed from the
+  cluster. In the case of a converged deployment, the resources of the
+  corresponding pod would also be freed.
+- By changing the `.spec.desiredState` of the Node, the administrator can notify
+  the operator (and by extension, other Gluster management layers) that the
+  particular node should be considered "in maintenance" (`disabled`)such that it
+  could be down for an extended time and should not be used as the source or
+  target of migration, nor should it be used for new data allocation.
 
-By changing the `spec.targetState` of the Node, the administrator can notify
-the operator (and by extension, other Gluster management layers) that the
-particular node should be considered "in maintenance" such that it could be
-down for an extended time and should not be used as the source or target of
-migration, nor should it be used for new data allocation.
+The annotation `anthill.gluster.org/template`, when present, indicates that
+this node object was created by the operator from the named template field. As
+such, the operator will keep the fields of this object in-sync with the
+template definition. When this annotation is present, the administrator should
+not modify any field other than `.spec.desiredState`. However, the
+administrator may still delete the object to signal that it should be
+decommissioned. Manually created `GlusterNode` objects should not have this
+annotation, and the administrator is free to modify all `.spec.*` fields.
+
+Within the `.spec`, the `cluster` field contains the name of the Gluster
+cluster to which this node belongs, and the `zone` field denotes the failure
+domain zone name for this node. The `desiredState` field denotes whether this
+node should be considered disabled (not used for new allocation and may be
+unavailable as well).
+
+Only one of `external` or `storage` may be present. If `external` exists, this
+object represents a Gluster server that is running external to the Kubernetes
+cluster. The fields in this section, provide the connection information
+(`address`) to access this node. For cases where Heketi and glusterd are in
+use, the `credentials` field can be used to provide authentication information
+so that Heketi can ssh to the node to perform management operatons. This field
+is not necessary when running glusterd2.
+
+Converged nodes (running as pods) will have a `storage` section. This section
+provides a list of either devices or PersistentVolumeClaims that will be used
+by the node for creating bricks. Care must be taken when providing device names
+directly that the devices correcponding to the provided names remain constant
+at all times.
+
+The `nodeAffitity` section provides the ability to limit the cluster nodes to
+which this Gluster server can be assigned. In the case of specifying devices
+directly, this should be used to limit the Gluster node to a single Kubernetes
+node. When using a PVC, the node affinity should be such that the PVC is
+accessible from the nodes that match the affinity, and the affinity should be
+further restricted to comply with the desired failure domain zone tag.
 
 # Examples
 
@@ -260,35 +278,26 @@ demands.
 
 ```yaml
 apiVersion: "operator.gluster.org/v1alpha1"
-kind: Cluster
+kind: GlusterCluster
 metadata:
   name: my-cluster
   namespace: gluster
 spec:
-  glusterCA: ca-secret
-```
-
-```yaml
-apiVersion: "operator.gluster.org/v1alpha1"
-kind: Zone
-metadata:
-  name: az1
-  cluster: my-cluster
-  namespace: gluster
-spec:
-  management:
-    mode: automatic
-    automatic:
-      minNodes: 3
-      maxNodes: 99
-      maxStorage: 100Ti
-      freeStorageMin: 500Gi
-      freeStorageMax: 2Ti
-  storage:
-    mode: volume
-    volume:
-      size: 1Ti
-      storageClass: ebs
+  drivers:
+    - gluster-fuse
+  glusterCA:
+    secretName: ca-secret
+  nodeTemplates:
+    - name: default
+      thresholds:
+        minNodes: 3
+        maxNodes: 99
+        maxStorage: 100Ti
+        freeStorageMin: 500Gi
+        freeStorageMax: 2Ti
+      storage:
+        storageClassName: ebs
+        size: 1Ti
 ```
 
 ## AWS cluster, multi AZ
@@ -301,109 +310,74 @@ Gluster pod will be placed in on a node that is compatible with the chosen EBS
 AZ.
 
 The zone names used here (`az1a`, `az1b`, and `az1c`) can be referenced in the
-CSI driver's `parameters.volumeLayout.dataZones` list to control placement.
+CSI driver's "data zones" list to control placement.
 
 ```yaml
 apiVersion: "operator.gluster.org/v1alpha1"
-kind: Cluster
+kind: GlusterCluster
 metadata:
   name: my-cluster
   namespace: gluster
 spec:
-  glusterCA: ca-secret
-```
-
-```yaml
-apiVersion: "operator.gluster.org/v1alpha1"
-kind: Zone
-metadata:
-  name: az1a
-  cluster: my-cluster
-  namespace: gluster
-spec:
-  management:
-    mode: automatic
-    automatic:
-      minNodes: 1
-      maxNodes: 99
-      maxStorage: 100Ti
-      freeStorageMin: 500Gi
-      freeStorageMax: 2Ti
-  nodeAffinity:
-    requiredDuringSchedulingIgnoredDuringExecution:
-      nodeSelectorTerms:
-        - matchExpressions:
-          - key: failure-domain.beta.kubernetes.io/zone
-            operator: In
-            values:
-              - us-east-1a
-  storage:
-    mode: volume
-    volume:
-      size: 1Ti
-      storageClass: ebs-1a
-```
-
-```yaml
-apiVersion: "operator.gluster.org/v1alpha1"
-kind: Zone
-metadata:
-  name: az1b
-  cluster: my-cluster
-  namespace: gluster
-spec:
-  management:
-    mode: automatic
-    automatic:
-      minNodes: 1
-      maxNodes: 99
-      maxStorage: 100Ti
-      freeStorageMin: 500Gi
-      freeStorageMax: 2Ti
-  nodeAffinity:
-    requiredDuringSchedulingIgnoredDuringExecution:
-      nodeSelectorTerms:
-        - matchExpressions:
-          - key: failure-domain.beta.kubernetes.io/zone
-            operator: In
-            values:
-              - us-east-1b
-  storage:
-    mode: volume
-    volume:
-      size: 1Ti
-      storageClass: ebs-1b
-```
-
-```yaml
-apiVersion: "operator.gluster.org/v1alpha1"
-kind: Zone
-metadata:
-  name: az1c
-  cluster: my-cluster
-  namespace: gluster
-spec:
-  management:
-    mode: automatic
-    automatic:
-      minNodes: 1
-      maxNodes: 99
-      maxStorage: 100Ti
-      freeStorageMin: 500Gi
-      freeStorageMax: 2Ti
-  nodeAffinity:
-    requiredDuringSchedulingIgnoredDuringExecution:
-      nodeSelectorTerms:
-        - matchExpressions:
-          - key: failure-domain.beta.kubernetes.io/zone
-            operator: In
-            values:
-              - us-east-1c
-  storage:
-    mode: volume
-    volume:
-      size: 1Ti
-      storageClass: ebs-1c
+  drivers:
+    - gluster-fuse
+  glusterCA:
+    secretName: ca-secret
+  nodeTemplates:
+    - name: az1a
+      thresholds:
+        minNodes: 3
+        maxNodes: 99
+        maxStorage: 100Ti
+        freeStorageMin: 500Gi
+        freeStorageMax: 2Ti
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+              - key: failure-domain.beta.kubernetes.io/zone
+                operator: In
+                values:
+                  - us-east-1a
+      storage:
+        storageClassName: ebs-1a
+        size: 1Ti
+    - name: az1b
+      thresholds:
+        minNodes: 3
+        maxNodes: 99
+        maxStorage: 100Ti
+        freeStorageMin: 500Gi
+        freeStorageMax: 2Ti
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+              - key: failure-domain.beta.kubernetes.io/zone
+                operator: In
+                values:
+                  - us-east-1b
+      storage:
+        storageClassName: ebs-1b
+        size: 1Ti
+    - name: az1c
+      thresholds:
+        minNodes: 3
+        maxNodes: 99
+        maxStorage: 100Ti
+        freeStorageMin: 500Gi
+        freeStorageMax: 2Ti
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+              - key: failure-domain.beta.kubernetes.io/zone
+                operator: In
+                values:
+                  - us-east-1c
+      storage:
+        storageClassName: ebs-1c
+        size: 1Ti
 ```
 
 ## Bare-metal or virtualized on-prem
@@ -412,27 +386,28 @@ With an on-prem installation, it is likely that raw storage will be exposed to
 nodes as direct-attached storage. This would be either as physical disks (for
 bare metal) or as a statically mapped device (VMWare) or LUN. In these cases,
 local block-mode PVs would be used for the storage backing the Gluster pods,
-leading to Zone definitions very similar to above (Cluster CR not shown):
+leading to template definitions very similar to above:
 
 ```yaml
 apiVersion: "operator.gluster.org/v1alpha1"
-kind: Zone
+kind: GlusterCluster
 metadata:
-  name: zone1
-  cluster: my-cluster
+  name: my-cluster
   namespace: gluster
 spec:
-  management:
-    mode: automatic
-    automatic:
-      minNodes: 3
-      maxNodes: 99
-      maxStorage: 100Ti
-      freeStorageMin: 500Gi
-      freeStorageMax: 2Ti
-  storage:
-    mode: volume
-    volume:
-      size: 1Ti
-      storageClass: local-pv
+  drivers:
+    - gluster-fuse
+  glusterCA:
+    secretName: ca-secret
+  nodeTemplates:
+    - name: default
+      thresholds:
+        minNodes: 3
+        maxNodes: 99
+        maxStorage: 100Ti
+        freeStorageMin: 500Gi
+        freeStorageMax: 2Ti
+      storage:
+        storageClassName: local-pv
+        size: 1Ti
 ```
