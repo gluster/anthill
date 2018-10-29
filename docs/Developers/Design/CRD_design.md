@@ -115,7 +115,7 @@ within this single namespace. The `spec` field provides the main configuration
 options.
 
 The `clusterOptions` section are Gluster options (i.e., normally manipulated
-via ithe cli `gluster vol set`) that do not take a volume parameter.
+via the cli `gluster vol set`) that do not take a volume parameter.
 
 The `drivers` list provides the list of CSI drivers that will be deployed by
 the operator for use with this Gluster cluster.
@@ -138,7 +138,7 @@ The `nodeTemplates` list provides a set of templates that the operator can use
 to automatically scale the Gluster cluster as required and to automatically
 replace failed storage nodes.
 
-Within this template, there is a `zone` tag that allows the nodes cretaed from
+Within this template, there is a `zone` tag that allows the nodes created from
 this template to be assigned to a specific failure domain. The default is to
 have the zone name equal to the template name. These zones can then be used to
 direct storage placement by referencing them in the StorageClass. Unless
@@ -150,7 +150,7 @@ when scaling should be invoked. The template can have a fixed (constant) number
 of nodes by setting `nodes` to the desired value. The operator can also
 dynamically size the template if, instead of setting `nodes`, the `minNodes`,
 `maxNodes`, `freeStorageMin`, and `freeStorageMax` are configured. In this
-case, the number of stroage nodes always remains between the min and max, and
+case, the number of storage nodes always remains between the min and max, and
 scaling within that range is triggered based on the amount of free storage (not
 assigned to a brick) exists across the nodes in that template.
 
@@ -224,7 +224,7 @@ actions:
   corresponding pod would also be freed.
 - By changing the `.spec.desiredState` of the Node, the administrator can notify
   the operator (and by extension, other Gluster management layers) that the
-  particular node should be considered "in maintenance" (`disabled`)such that it
+  particular node should be considered "in maintenance" (`disabled`) such that it
   could be down for an extended time and should not be used as the source or
   target of migration, nor should it be used for new data allocation.
 
@@ -248,13 +248,13 @@ object represents a Gluster server that is running external to the Kubernetes
 cluster. The fields in this section, provide the connection information
 (`address`) to access this node. For cases where Heketi and glusterd are in
 use, the `credentials` field can be used to provide authentication information
-so that Heketi can ssh to the node to perform management operatons. This field
+so that Heketi can ssh to the node to perform management operations. This field
 is not necessary when running glusterd2.
 
 Converged nodes (running as pods) will have a `storage` section. This section
 provides a list of either devices or PersistentVolumeClaims that will be used
 by the node for creating bricks. Care must be taken when providing device names
-directly that the devices correcponding to the provided names remain constant
+directly that the devices corresponding to the provided names remain constant
 at all times.
 
 The `nodeAffitity` section provides the ability to limit the cluster nodes to
@@ -272,7 +272,7 @@ defined above.
 ## AWS cluster, single AZ
 
 This provides a very simple, single availability zone deployment with most
-options remaining as default. The Gluster pods can be placed arbitrarity within
+options remaining as default. The Gluster pods can be placed arbitrarily within
 the cluster, and the number of nodes can be scaled as required to meet capacity
 demands.
 
