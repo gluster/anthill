@@ -40,12 +40,12 @@ run_check '.*\.adoc' asciidoctor -o /dev/null -v --failure-level WARN
 # markdownlint: https://github.com/markdownlint/markdownlint
 # https://github.com/markdownlint/markdownlint/blob/master/docs/RULES.md
 # Install via: gem install mdl
-run_check '.*\.md' mdl
+run_check '.*\.md' mdl --style scripts/mdl-style.rb
 
 # Install via: dnf install shellcheck
 run_check '.*\.(ba)?sh' shellcheck
 
 # Install via: pip install yamllint
-run_check '.*\.ya?ml' yamllint -s
+run_check '.*\.ya?ml' yamllint -s -d "{extends: default, rules: {line-length: {allow-non-breakable-inline-mappings: true}}}"
 
 echo "ALL OK."
