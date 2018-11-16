@@ -37,5 +37,6 @@ rules:
       - operator.gluster.org
     resources:
       - '*'
+      - glusternodes
     verbs:
       - '*'
