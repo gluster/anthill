@@ -18,7 +18,8 @@ function run_check() {
     shift
 
     if [ -x "$(command -v "$exe")" ]; then
-        find . -regextype egrep -iregex "$regex" -print0 | \
+        find . -name vendor -prune -o \
+            -regextype egrep -iregex "$regex" -print0 | \
             xargs -0rt -n1 "$exe" "$@"
     elif [ "$all_required" -eq 0 ]; then
         echo "Warning: $exe not found... skipping some tests."
