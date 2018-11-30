@@ -24,20 +24,21 @@ Once the SDK is installed, Anthill can be built via:
 $ dep ensure
 
 $ operator-sdk build docker.io/gluster/anthill
-INFO[0001] Building Docker image docker.io/gluster/anthill
-Sending build context to Docker daemon  114.7MB
-Step 1/4 : FROM alpine:3.8
- ---> 196d12cf6ab1
-Step 2/4 : RUN apk upgrade --update --no-cache
+$ operator-sdk build docker.io/gluster/anthill
+INFO[0000] Building Docker image docker.io/gluster/anthill
+Sending build context to Docker daemon  152.1MB
+Step 1/3 : FROM docker.io/centos:7.5.1804
+7.5.1804: Pulling from library/centos
+Digest: sha256:adbf1369c8dbeaa2bf9df0b891394e3ca09b5272a2fb54e0fadc6b14dd93fcad
+Status: Downloaded newer image for centos:7.5.1804
+ ---> 76d6bc25b8a5
+Step 2/3 : USER nobody
  ---> Using cache
- ---> 6a5bb76fe272
-Step 3/4 : USER nobody
+ ---> dc1dd738f9a4
+Step 3/3 : ADD build/_output/bin/anthill /usr/local/bin/anthill
  ---> Using cache
- ---> faf8acce50e4
-Step 4/4 : ADD build/_output/bin/anthill /usr/local/bin/anthill
- ---> Using cache
- ---> b404638145da
-Successfully built b404638145da
+ ---> cffc3a0ef59e
+Successfully built cffc3a0ef59e
 Successfully tagged gluster/anthill:latest
 INFO[0002] Operator build complete.
 ```

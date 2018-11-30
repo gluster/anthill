@@ -1,6 +1,4 @@
-FROM alpine:3.8
-
-RUN apk upgrade --update --no-cache
+FROM docker.io/centos:7.5.1804
 
 USER nobody
 
