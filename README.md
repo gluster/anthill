@@ -60,8 +60,6 @@ serviceaccount "anthill" created
 
 $ kubectl apply -f deploy/role.yaml
 role.rbac.authorization.k8s.io "anthill" created
-
-$ kubectl apply -f deploy/role_binding.yaml
 rolebinding.rbac.authorization.k8s.io "anthill" created
 ```
 
