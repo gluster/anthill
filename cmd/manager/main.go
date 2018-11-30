@@ -6,8 +6,6 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/gluster/anthill/pkg/apis"
-	"github.com/gluster/anthill/pkg/controller"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -15,6 +13,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
+
+	"github.com/gluster/anthill/pkg/apis"
+	"github.com/gluster/anthill/pkg/controller"
 )
 
 func printVersion() {
