@@ -1,24 +1,55 @@
 ---
-sudo: false
+sudo: true
 
 addons:
   apt:
     packages:
+      - docker-ce
+      - python
       - realpath
       - ruby
 
+env:
+  global:
+    - GO_METALINTER_VERSION="v2.0.11"
+    - OPERATOR_SDK_URL="https://github.com/operator-framework/operator-sdk/releases/download/v0.2.0/operator-sdk-v0.2.0-x86_64-linux-gnu"
+
 jobs:
   include:
-    - stage: linters
-      name: pre-commit linter
-      language: python
+    - name: Linters
       install:
         - gem install asciidoctor mdl
-        - pip install yamllint
-      script: scripts/pre-commit.sh --require-all
-    - stage: linters
-      name: Documentation linter
-      language: python
+        - pip install --user mkdocs yamllint
+      script:
+        - scripts/pre-commit.sh --require-all
+        - mkdocs build
+    - name: Build
+      language: go
+      go:
+        - stable
+        - "1.10"
+      go_import_path: "github.com/gluster/anthill"
       install:
-        - pip install mkdocs
-      script: mkdocs build
+        - >
+          curl -L
+          https://raw.githubusercontent.com/golang/dep/master/install.sh
+          | sh
+        # install gometalinter
+        - >
+          curl -L
+          'https://raw.githubusercontent.com/alecthomas/gometalinter/master/scripts/install.sh'
+          | bash -s -- -b ${TRAVIS_HOME}/gopath/bin "${GO_METALINTER_VERSION}"
+        # install operator-sdk
+        - >
+          sudo curl -L -o /usr/local/bin/operator-sdk "${OPERATOR_SDK_URL}"
+          && sudo chmod a+x /usr/local/bin/operator-sdk
+      script:
+        - dep ensure -v --vendor-only
+        - >
+          set -o pipefail &&
+          gometalinter -j4
+          --sort path --sort line --sort column
+          --deadline=9m --enable="gofmt" --vendor --debug
+          --exclude="zz_generated.deepcopy.go" ./...
+          |& stdbuf -oL grep "linter took\\|:warning:\\|:error:"
+        - operator-sdk build docker.io/gluster/anthill
