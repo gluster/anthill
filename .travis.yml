@@ -1,4 +1,6 @@
 ---
+# yamllint disable rule:line-length
+
 sudo: true
 
 addons:
@@ -13,6 +15,7 @@ env:
   global:
     - GO_METALINTER_VERSION="v2.0.11"
     - OPERATOR_SDK_URL="https://github.com/operator-framework/operator-sdk/releases/download/v0.2.0/operator-sdk-v0.2.0-x86_64-linux-gnu"
+    - CONTAINER_REPO="gluster/anthill"
 
 jobs:
   include:
@@ -30,15 +33,9 @@ jobs:
         - "1.10"
       go_import_path: "github.com/gluster/anthill"
       install:
-        - >
-          curl -L
-          https://raw.githubusercontent.com/golang/dep/master/install.sh
-          | sh
+        - curl -L https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
         # install gometalinter
-        - >
-          curl -L
-          'https://raw.githubusercontent.com/alecthomas/gometalinter/master/scripts/install.sh'
-          | bash -s -- -b ${TRAVIS_HOME}/gopath/bin "${GO_METALINTER_VERSION}"
+        - curl -L 'https://raw.githubusercontent.com/alecthomas/gometalinter/master/scripts/install.sh' | bash -s -- -b ${TRAVIS_HOME}/gopath/bin "${GO_METALINTER_VERSION}"
         # install operator-sdk
         - >
           sudo curl -L -o /usr/local/bin/operator-sdk "${OPERATOR_SDK_URL}"
@@ -52,4 +49,17 @@ jobs:
           --deadline=9m --enable="gofmt" --vendor --debug
           --exclude="zz_generated.deepcopy.go" ./...
           |& stdbuf -oL grep "linter took\\|:warning:\\|:error:"
-        - operator-sdk build docker.io/gluster/anthill
+        - operator-sdk build "${CONTAINER_REPO}"
+      deploy:
+        # Master branch will push the container to :latest
+        - provider: script
+          on:  # yamllint disable-line rule:truthy
+            branch: master
+          script: .travis/push_container.sh ${CONTAINER_REPO} verbatim latest
+        # Tags of the form v + SEMVER (e.g., v1.2.3) will push to the
+        # corresponding container version number (e.g., :1.2.3).
+        - provider: script
+          on:  # yamllint disable-line rule:truthy
+            tags: true
+            condition: $TRAVIS_TAG =~ ^v[0-9]+
+          script: .travis/push_container.sh ${CONTAINER_REPO} version "$TRAVIS_TAG"
