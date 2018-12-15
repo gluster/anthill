@@ -1,22 +1,42 @@
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+// Credentials defines gluster node secret credentials
+type Credentials struct {
+	SecretName      string `json:"secretName,omitempty"`
+	SecretNamespace string `json:"secreteNamespace,omitempty"`
+}
+
+// GlusterNodeExternal defines external details of gluster nodes
+type GlusterNodeExternal struct {
+	Address string       `json:"address,omitempty"`
+	Creds   *Credentials `json:"credentials,omitempty"`
+}
+
+// StorageDevice defines storage details of gluster nodes
+type StorageDevice struct {
+	Device  string   `json:"device,omitempty"`
+	PVCName string   `json:"pvcName,omitempty"`
+	Tags    []string `json:"tags"`
+}
 
 // GlusterNodeSpec defines the desired state of GlusterNode
 type GlusterNodeSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
+	Cluster      string               `json:"cluster,omitempty"`
+	Zone         string               `json:"zone,omitempty"`
+	DesiredState string               `json:"desiredState,omitempty"`
+	ExternalInfo *GlusterNodeExternal `json:"external,omitempty"`
+	Storage      []StorageDevice      `json:"storage"`
+	Affinity     *corev1.NodeAffinity `json:"nodeAffinity,omitempty"`
 }
 
 // GlusterNodeStatus defines the observed state of GlusterNode
 type GlusterNodeStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
+	State string `json:"currentState,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

@@ -1,22 +1,66 @@
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+// GlusterStorageTarget defines a storage target
+// used in StorageClass. Each storage class need to be
+// backed by a source of storage which is defined by this
+// target
+type GlusterStorageTarget struct {
+	Name        string       `json:"name,omitempty"`
+	Addresses   []string     `json:"address"`
+	Credentials *Credentials `json:"credentials,omitempty"`
+}
+
+// GlusterClusterReplicationDetails defines replication details
+// for the cluster if geo-replication is used for volumes. This
+// defines the target where volumes from the cluster would get
+// geo replicated
+type GlusterClusterReplicationDetails struct {
+	Credentials *Credentials           `json:"credentials,omitempty"`
+	Targets     []GlusterStorageTarget `json:"targets"`
+}
+
+// GlusterNodeThreshold defines threshold details for node
+type GlusterNodeThreshold struct {
+	Nodes          *int               `json:"nodes,omitempty"`
+	MinNodes       *int               `json:"minNodes,omitempty"`
+	MaxNodes       *int               `json:"maxNodes,omitempty"`
+	FreeStorageMin *resource.Quantity `json:"freeStorageMin,omitempty"`
+	FreeStorageMax *resource.Quantity `json:"freeStorageMax,omitempty"`
+}
+
+// GlusterNodeStorageDetails defines storage class details
+type GlusterNodeStorageDetails struct {
+	StorageClassName string             `json:"storageClassName,omitempty"`
+	Capacity         *resource.Quantity `json:"capacity,omitempty"`
+}
+
+// GlusterNodeTemplate defines a gluster node's template
+type GlusterNodeTemplate struct {
+	Name       string                     `json:"name,omitempty"`
+	Zone       string                     `json:"zone,omitempty"`
+	Threshold *GlusterNodeThreshold       `json:"threshold,omitempty"`
+	Affinity   *corev1.NodeAffinity       `json:"nodeAffinity,omitempty"`
+	Storage    *GlusterNodeStorageDetails `json:"storage,omitempty"`
+}
 
 // GlusterClusterSpec defines the desired state of GlusterCluster
 type GlusterClusterSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
+	Options       map[string]string                 `json:"clusterOptions,omitempty"`
+	Drivers       []string                          `json:"drivers"`
+	GlusterCA     *Credentials                      `json:"glusterCA,omitempty"`
+	Replication   *GlusterClusterReplicationDetails `json:"replication,omitempty"`
+	NodeTemplates []GlusterNodeTemplate             `json:"nodeTemplates"`
 }
 
 // GlusterClusterStatus defines the observed state of GlusterCluster
 type GlusterClusterStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
+	State string `json:"state,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
