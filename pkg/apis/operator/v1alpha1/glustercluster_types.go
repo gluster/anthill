@@ -2,8 +2,8 @@ package v1alpha1
 
 import (
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // GlusterStorageTarget defines a storage target
@@ -42,11 +42,11 @@ type GlusterNodeStorageDetails struct {
 
 // GlusterNodeTemplate defines a gluster node's template
 type GlusterNodeTemplate struct {
-	Name       string                     `json:"name,omitempty"`
-	Zone       string                     `json:"zone,omitempty"`
-	Threshold *GlusterNodeThreshold       `json:"threshold,omitempty"`
-	Affinity   *corev1.NodeAffinity       `json:"nodeAffinity,omitempty"`
-	Storage    *GlusterNodeStorageDetails `json:"storage,omitempty"`
+	Name      string                     `json:"name,omitempty"`
+	Zone      string                     `json:"zone,omitempty"`
+	Threshold *GlusterNodeThreshold      `json:"threshold,omitempty"`
+	Affinity  *corev1.NodeAffinity       `json:"nodeAffinity,omitempty"`
+	Storage   *GlusterNodeStorageDetails `json:"storage,omitempty"`
 }
 
 // GlusterClusterSpec defines the desired state of GlusterCluster

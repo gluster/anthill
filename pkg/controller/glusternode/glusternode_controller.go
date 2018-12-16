@@ -58,11 +58,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		IsController: true,
 		OwnerType:    &operatorv1alpha1.GlusterNode{},
 	})
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 var _ reconcile.Reconciler = &ReconcileGlusterNode{}
@@ -104,7 +100,7 @@ func (r *ReconcileGlusterNode) Reconcile(request reconcile.Request) (reconcile.R
 	pod := newPodForCR(instance)
 
 	// Set GlusterNode instance as the owner and controller
-	if err := controllerutil.SetControllerReference(instance, pod, r.scheme); err != nil {
+	if err = controllerutil.SetControllerReference(instance, pod, r.scheme); err != nil {
 		return reconcile.Result{}, err
 	}
 
