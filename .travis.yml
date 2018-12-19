@@ -21,8 +21,8 @@ jobs:
   include:
     - name: Linters
       install:
-        - gem install asciidoctor mdl
-        - pip install --user mkdocs yamllint
+        - travis_retry gem install asciidoctor mdl
+        - travis_retry pip install --user mkdocs yamllint
       script:
         - scripts/pre-commit.sh --require-all
         - mkdocs build
@@ -33,15 +33,15 @@ jobs:
         - "1.10"
       go_import_path: "github.com/gluster/anthill"
       install:
-        - curl -L https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+        - travis_retry curl -L https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
         # install gometalinter
-        - curl -L 'https://raw.githubusercontent.com/alecthomas/gometalinter/master/scripts/install.sh' | bash -s -- -b ${TRAVIS_HOME}/gopath/bin "${GO_METALINTER_VERSION}"
+        - travis_retry curl -L 'https://raw.githubusercontent.com/alecthomas/gometalinter/master/scripts/install.sh' | bash -s -- -b ${TRAVIS_HOME}/gopath/bin "${GO_METALINTER_VERSION}"
         # install operator-sdk
         - >
-          sudo curl -L -o /usr/local/bin/operator-sdk "${OPERATOR_SDK_URL}"
+          travis_retry sudo curl -L -o /usr/local/bin/operator-sdk "${OPERATOR_SDK_URL}"
           && sudo chmod a+x /usr/local/bin/operator-sdk
       script:
-        - dep ensure -v --vendor-only
+        - travis_retry dep ensure -v --vendor-only
         - >
           set -o pipefail &&
           gometalinter -j4
