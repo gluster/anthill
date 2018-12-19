@@ -1,24 +1,65 @@
 ---
-sudo: false
+# yamllint disable rule:line-length
+
+sudo: true
 
 addons:
   apt:
     packages:
+      - docker-ce
+      - python
       - realpath
       - ruby
 
+env:
+  global:
+    - GO_METALINTER_VERSION="v2.0.11"
+    - OPERATOR_SDK_URL="https://github.com/operator-framework/operator-sdk/releases/download/v0.2.0/operator-sdk-v0.2.0-x86_64-linux-gnu"
+    - CONTAINER_REPO="gluster/anthill"
+
 jobs:
   include:
-    - stage: linters
-      name: pre-commit linter
-      language: python
+    - name: Linters
       install:
-        - gem install asciidoctor mdl
-        - pip install yamllint
-      script: scripts/pre-commit.sh --require-all
-    - stage: linters
-      name: Documentation linter
-      language: python
+        - travis_retry gem install asciidoctor mdl
+        - travis_retry pip install --user mkdocs yamllint
+      script:
+        - scripts/pre-commit.sh --require-all
+        - mkdocs build
+    - name: Build
+      language: go
+      go:
+        - stable
+        - "1.10"
+      go_import_path: "github.com/gluster/anthill"
       install:
-        - pip install mkdocs
-      script: mkdocs build
+        - travis_retry curl -L https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+        # install gometalinter
+        - travis_retry curl -L 'https://raw.githubusercontent.com/alecthomas/gometalinter/master/scripts/install.sh' | bash -s -- -b ${TRAVIS_HOME}/gopath/bin "${GO_METALINTER_VERSION}"
+        # install operator-sdk
+        - >
+          travis_retry sudo curl -L -o /usr/local/bin/operator-sdk "${OPERATOR_SDK_URL}"
+          && sudo chmod a+x /usr/local/bin/operator-sdk
+      script:
+        - travis_retry dep ensure -v --vendor-only
+        - >
+          set -o pipefail &&
+          gometalinter -j4
+          --sort path --sort line --sort column
+          --deadline=9m --enable="gofmt" --vendor --debug
+          --exclude="zz_generated.deepcopy.go" ./...
+          |& stdbuf -oL grep "linter took\\|:warning:\\|:error:"
+        - ./build.sh "${CONTAINER_REPO}"
+      deploy:
+        # Master branch will push the container to :latest
+        - provider: script
+          on:  # yamllint disable-line rule:truthy
+            branch: master
+          script: .travis/push_container.sh ${CONTAINER_REPO} verbatim latest
+        # Tags of the form v + SEMVER (e.g., v1.2.3) will push to the
+        # corresponding container version number (e.g., :1.2.3).
+        - provider: script
+          on:  # yamllint disable-line rule:truthy
+            tags: true
+            condition: $TRAVIS_TAG =~ ^v[0-9]+
+          script: .travis/push_container.sh ${CONTAINER_REPO} version "$TRAVIS_TAG"

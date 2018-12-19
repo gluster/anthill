@@ -1,0 +1,8 @@
+---
+apiVersion: operator.gluster.org/v1alpha1
+kind: GlusterCluster
+metadata:
+  name: example-glustercluster
+spec:
+  # Add fields here
+  size: 3
