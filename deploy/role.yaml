@@ -18,6 +18,12 @@ rules:
     verbs:
       - '*'
   - apiGroups:
+      - ""
+    resources:
+      - namespaces
+    verbs:
+      - get
+  - apiGroups:
       - apps
     resources:
       - deployments
@@ -37,6 +43,5 @@ rules:
       - operator.gluster.org
     resources:
       - '*'
-      - glusternodes
     verbs:
       - '*'

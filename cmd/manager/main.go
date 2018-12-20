@@ -1,31 +1,34 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
 	"runtime"
 
+	"github.com/gluster/anthill/pkg/apis"
+	"github.com/gluster/anthill/pkg/controller"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
+	"github.com/operator-framework/operator-sdk/pkg/leader"
+	"github.com/operator-framework/operator-sdk/pkg/ready"
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
-
-	"github.com/gluster/anthill/pkg/apis"
-	"github.com/gluster/anthill/pkg/controller"
 )
 
+var log = logf.Log.WithName("cmd")
+
 func printVersion() {
-	logf.Log.Info(fmt.Sprintf("Go Version: %s", runtime.Version()))
-	logf.Log.Info(fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
-	logf.Log.Info(fmt.Sprintf("operator-sdk Version: %v", sdkVersion.Version))
+	log.Info(fmt.Sprintf("Go Version: %s", runtime.Version()))
+	log.Info(fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
+	log.Info(fmt.Sprintf("operator-sdk Version: %v", sdkVersion.Version))
 }
 
 func main() {
-	printVersion()
 	flag.Parse()
 
 	// The logger instantiated here can be changed to any logger
@@ -33,7 +36,8 @@ func main() {
 	// be propagated through the whole operator, generating
 	// uniform and structured logs.
 	logf.SetLogger(logf.ZapLogger(false))
-	log := logf.Log.WithName("cmd")
+
+	printVersion()
 
 	namespace, err := k8sutil.GetWatchNamespace()
 	if err != nil {
@@ -47,6 +51,21 @@ func main() {
 		log.Error(err, "")
 		os.Exit(1)
 	}
+
+	// Become the leader before proceeding
+	err = leader.Become(context.TODO(), "anthill-lock")
+	if err != nil {
+		log.Error(err, "failed to acquire leader lock")
+		os.Exit(1)
+	}
+
+	r := ready.NewFileReady()
+	err = r.Set()
+	if err != nil {
+		log.Error(err, "")
+		os.Exit(1)
+	}
+	defer r.Unset() // nolint: errcheck
 
 	// Create a new Cmd to provide shared dependencies and start components
 	mgr, err := manager.New(cfg, manager.Options{Namespace: namespace})
