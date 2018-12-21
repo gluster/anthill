@@ -46,7 +46,7 @@ jobs:
           set -o pipefail &&
           gometalinter -j4
           --sort path --sort line --sort column
-          --deadline=9m --enable="gofmt" --vendor --debug
+          --deadline=24h --enable="gofmt" --vendor --debug
           --exclude="zz_generated.deepcopy.go" ./...
           |& stdbuf -oL grep "linter took\\|:warning:\\|:error:"
         - ./build.sh "${CONTAINER_REPO}"
