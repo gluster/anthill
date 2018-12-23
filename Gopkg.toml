@@ -10,6 +10,11 @@ required = [
   "k8s.io/gengo/args",
 ]
 
+# This override is necessary for compatibility w/ versions of go pre 1.11
+[[override]]
+  name = "golang.org/x/net"
+  branch = "release-branch.go1.10"
+
 [[override]]
   name = "k8s.io/code-generator"
   # revision for tag "kubernetes-1.11.2"
@@ -48,7 +53,7 @@ required = [
 [prune]
   go-tests = true
   non-go = true
-  
+
   [[prune.project]]
     name = "k8s.io/code-generator"
     non-go = false
