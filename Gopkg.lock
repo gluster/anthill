@@ -334,19 +334,19 @@
   revision = "3d3f9f413869b949e48070b5bc593aa22cc2b8f2"
 
 [[projects]]
-  branch = "master"
-  digest = "1:d103910996bb5cd0c1cdbae00f22238e8f136ba70e70c242fcc28c400f2b2c75"
+  branch = "release-branch.go1.10"
+  digest = "1:dd03289ba264de428e38dd8d56528b7ee127f73878aed88a856d8202fdd2d061"
   name = "golang.org/x/net"
   packages = [
     "context",
     "context/ctxhttp",
-    "http/httpguts",
     "http2",
     "http2/hpack",
     "idna",
+    "lex/httplex",
   ]
   pruneopts = "NT"
-  revision = "adae6a3d119ae4890b46832a2e88a95adc62b8e7"
+  revision = "0ed95abb35c445290478a5348a7b38bb154135fd"
 
 [[projects]]
   branch = "master"
@@ -587,6 +587,7 @@
     "rest",
     "rest/watch",
     "restmapper",
+    "testing",
     "third_party/forked/golang/template",
     "tools/auth",
     "tools/cache",
@@ -695,6 +696,7 @@
     "pkg/client",
     "pkg/client/apiutil",
     "pkg/client/config",
+    "pkg/client/fake",
     "pkg/controller",
     "pkg/controller/controllerutil",
     "pkg/event",
@@ -729,6 +731,7 @@
     "github.com/operator-framework/operator-sdk/version",
     "k8s.io/api/core/v1",
     "k8s.io/apimachinery/pkg/api/errors",
+    "k8s.io/apimachinery/pkg/api/resource",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
     "k8s.io/apimachinery/pkg/runtime",
     "k8s.io/apimachinery/pkg/runtime/schema",
@@ -744,6 +747,7 @@
     "k8s.io/gengo/args",
     "sigs.k8s.io/controller-runtime/pkg/client",
     "sigs.k8s.io/controller-runtime/pkg/client/config",
+    "sigs.k8s.io/controller-runtime/pkg/client/fake",
     "sigs.k8s.io/controller-runtime/pkg/controller",
     "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil",
     "sigs.k8s.io/controller-runtime/pkg/handler",
