@@ -216,14 +216,6 @@
   version = "v1.1.5"
 
 [[projects]]
-  digest = "1:4059c14e87a2de3a434430340521b5feece186c1469eff0834c29a63870de3ed"
-  name = "github.com/konsorten/go-windows-terminal-sequences"
-  packages = ["."]
-  pruneopts = "NT"
-  revision = "5c8c8bd35d3832f5d134ae1e1e375b69a4d25242"
-  version = "v1.0.1"
-
-[[projects]]
   branch = "master"
   digest = "1:7d9fcac7f1228470c4ea0ee31cdfb662a758c44df691e39b3e76c11d3e12ba8f"
   name = "github.com/mailru/easyjson"
@@ -264,10 +256,7 @@
   digest = "1:57b5e60954a9c1e3b17427ccab5771b96d6c9d48114cb50331eceff2ddc6ad45"
   name = "github.com/operator-framework/operator-sdk"
   packages = [
-    "internal/util/k8sutil",
     "pkg/k8sutil",
-    "pkg/test",
-    "pkg/test/e2eutil",
     "version",
   ]
   pruneopts = "NT"
@@ -296,14 +285,6 @@
   pruneopts = "NT"
   revision = "5f041e8faa004a95c88a202771f4cc3e991971e6"
   version = "v2.0.1"
-
-[[projects]]
-  digest = "1:cd2f2cba5b7ffafd0412fb647ff4bcff170292de57270f05fbbf391e3eb9566b"
-  name = "github.com/sirupsen/logrus"
-  packages = ["."]
-  pruneopts = "NT"
-  revision = "bcd833dfe83d3cebad139e4a29ed79cb2318bf95"
-  version = "v1.2.0"
 
 [[projects]]
   digest = "1:9d8420bbf131d1618bde6530af37c3799340d3762cc47210c1d9532a4c3a2779"
@@ -353,19 +334,19 @@
   revision = "3d3f9f413869b949e48070b5bc593aa22cc2b8f2"
 
 [[projects]]
-  branch = "master"
-  digest = "1:d103910996bb5cd0c1cdbae00f22238e8f136ba70e70c242fcc28c400f2b2c75"
+  branch = "release-branch.go1.10"
+  digest = "1:dd03289ba264de428e38dd8d56528b7ee127f73878aed88a856d8202fdd2d061"
   name = "golang.org/x/net"
   packages = [
     "context",
     "context/ctxhttp",
-    "http/httpguts",
     "http2",
     "http2/hpack",
     "idna",
+    "lex/httplex",
   ]
   pruneopts = "NT"
-  revision = "adae6a3d119ae4890b46832a2e88a95adc62b8e7"
+  revision = "0ed95abb35c445290478a5348a7b38bb154135fd"
 
 [[projects]]
   branch = "master"
@@ -511,17 +492,6 @@
   revision = "2d6f90ab1293a1fb871cf149423ebb72aa7423aa"
 
 [[projects]]
-  digest = "1:117a407949aaaad9f7fbe3da8d6c2055f2c223ac0cbebd39f47ff71899622a91"
-  name = "k8s.io/apiextensions-apiserver"
-  packages = [
-    "pkg/apis/apiextensions",
-    "pkg/apis/apiextensions/v1beta1",
-    "pkg/client/clientset/clientset/scheme",
-  ]
-  pruneopts = "NT"
-  revision = "408db4a50408e2149acbd657bceb2480c13cb0a4"
-
-[[projects]]
   digest = "1:b07bf863262aae765494d60f0d524483f211b29f9bb27d445a79c13af8676bf2"
   name = "k8s.io/apimachinery"
   packages = [
@@ -576,7 +546,6 @@
   name = "k8s.io/client-go"
   packages = [
     "discovery",
-    "discovery/cached",
     "dynamic",
     "kubernetes",
     "kubernetes/scheme",
@@ -757,8 +726,6 @@
   analyzer-version = 1
   input-imports = [
     "github.com/operator-framework/operator-sdk/pkg/k8sutil",
-    "github.com/operator-framework/operator-sdk/pkg/test",
-    "github.com/operator-framework/operator-sdk/pkg/test/e2eutil",
     "github.com/operator-framework/operator-sdk/version",
     "k8s.io/api/core/v1",
     "k8s.io/apimachinery/pkg/api/errors",
