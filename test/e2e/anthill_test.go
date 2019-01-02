@@ -2,14 +2,12 @@ package e2e
 
 import (
 	goctx "context"
-	//"fmt"
 	"testing"
 	"time"
 
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	"github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	//"k8s.io/apimachinery/pkg/types"
 
 	apis "github.com/gluster/anthill/pkg/apis"
 	operator "github.com/gluster/anthill/pkg/apis/operator/v1alpha1"
