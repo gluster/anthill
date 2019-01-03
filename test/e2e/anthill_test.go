@@ -5,12 +5,12 @@ import (
 	"testing"
 	"time"
 
+	apis "github.com/gluster/anthill/pkg/apis"
+	operator "github.com/gluster/anthill/pkg/apis/operator/v1alpha1"
+
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	"github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	apis "github.com/gluster/anthill/pkg/apis"
-	operator "github.com/gluster/anthill/pkg/apis/operator/v1alpha1"
 )
 
 var (
@@ -58,7 +58,7 @@ func simpleTest(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// create memcached custom resource
+	// create custom resource
 	cluster := &operator.GlusterCluster{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "GlusterCluster",
@@ -68,9 +68,7 @@ func simpleTest(t *testing.T) {
 			Name:      "cluster",
 			Namespace: namespace,
 		},
-		Spec: operator.GlusterClusterSpec{
-			//Size: 3,
-		},
+		Spec: operator.GlusterClusterSpec{},
 	}
 	err = f.Client.Create(goctx.TODO(), cluster, &framework.CleanupOptions{TestContext: ctx, Timeout: time.Second * 5, RetryInterval: time.Second * 1})
 	if err != nil {
