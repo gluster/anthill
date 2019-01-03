@@ -89,6 +89,47 @@ func TestProcedureNotFullyReconciledIfFalseAction(t *testing.T) {
 	}
 }
 
+func TestPrereqsHaveCacheCleared(t *testing.T) {
+	request := reconcile.Request{
+		NamespacedName: types.NamespacedName{
+			Name:      "name",
+			Namespace: "namespace",
+		},
+	}
+	client := fake.NewFakeClient()
+	var scheme *runtime.Scheme
+
+	// a is an action w/ a counting prereq, so we can tell how often the
+	// prereqs get called.
+	a := Action{
+		prereqs: []*Action{&countAction},
+		action:  trueAction.action,
+	}
+	p := Procedure{
+		version:    8,
+		minVersion: 7,
+		actions:    []*Action{&a},
+	}
+	count = 0
+	_, err := p.Execute(request, client, scheme)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	if count != 1 {
+		t.Errorf("countAction prereq should have been called once; actual: %d", count)
+	}
+	// execute again. The cache should be cleared, causing count to
+	// increase.
+	_, err = p.Execute(request, client, scheme)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	if count != 2 {
+		t.Errorf("countAction prereq should have been called a 2nd time; actual: %d", count)
+	}
+
+}
+
 var pl = ProcedureList{v8, v9, v7} // out of order to check sorting
 
 func TestEmptyListReturnsError(t *testing.T) {

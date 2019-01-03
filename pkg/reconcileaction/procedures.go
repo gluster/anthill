@@ -97,8 +97,13 @@ func (p *Procedure) Execute(request reconcile.Request, client client.Client, sch
 		actions[i], actions[j] = actions[j], actions[i]
 	})
 
-	// Clear any cached action state
+	// Clear cached action state
 	for _, step := range actions {
+		// Clear the action's prereqs
+		for _, pre := range step.prereqs {
+			pre.Clear()
+		}
+		// Clear the action
 		step.Clear()
 	}
 
