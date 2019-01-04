@@ -18,6 +18,12 @@ rules:
     verbs:
       - '*'
   - apiGroups:
+      - ""
+    resources:
+      - namespaces
+    verbs:
+      - get
+  - apiGroups:
       - apps
     resources:
       - deployments
@@ -37,19 +43,5 @@ rules:
       - operator.gluster.org
     resources:
       - '*'
-      - glusternodes
     verbs:
       - '*'
-
----
-kind: RoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: anthill
-subjects:
-  - kind: ServiceAccount
-    name: anthill
-roleRef:
-  kind: Role
-  name: anthill
-  apiGroup: rbac.authorization.k8s.io

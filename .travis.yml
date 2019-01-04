@@ -14,7 +14,7 @@ addons:
 env:
   global:
     - GO_METALINTER_VERSION="v2.0.11"
-    - OPERATOR_SDK_URL="https://github.com/operator-framework/operator-sdk/releases/download/v0.2.0/operator-sdk-v0.2.0-x86_64-linux-gnu"
+    - OPERATOR_SDK_URL="https://github.com/operator-framework/operator-sdk/releases/download/v0.3.0/operator-sdk-v0.3.0-x86_64-linux-gnu"
     - CONTAINER_REPO="gluster/anthill"
 
 jobs:
