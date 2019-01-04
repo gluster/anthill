@@ -21,7 +21,7 @@ here.](https://github.com/operator-framework/operator-sdk#quick-start)
 Once the SDK is installed, Anthill can be built via:
 
 ```bash
-$ dep ensure
+$ dep ensure --vendor-only
 
 $ operator-sdk build docker.io/gluster/anthill
 $ operator-sdk build docker.io/gluster/anthill

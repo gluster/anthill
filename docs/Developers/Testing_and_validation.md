@@ -44,3 +44,4 @@ Currently, it:
 
 - runs the pre-commit.sh script to lint all formatted files
 - runs mkdocs to ensure the documentation builds cleanly
+- builds the operator container and pushes to Quay.
