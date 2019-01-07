@@ -18,9 +18,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	operatorv1alpha1 "github.com/gluster/anthill/pkg/apis/operator/v1alpha1"
+	"github.com/gluster/anthill/pkg/reconciler"
 )
 
-var log = logf.Log.WithName("controller_glustercluster")
+var (
+	allProcedures reconciler.ProcedureList = []reconciler.Procedure{v0}
+	log                                    = logf.Log.WithName("controller_glustercluster")
+)
 
 /**
 * USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
