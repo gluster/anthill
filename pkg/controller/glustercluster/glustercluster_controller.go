@@ -96,6 +96,25 @@ func (r *ReconcileGlusterCluster) Reconcile(request reconcile.Request) (reconcil
 		return reconcile.Result{}, err
 	}
 
+	// ----- general flow of reconcile -----
+
+	// Get current reconcile version from CR
+
+	// If no current version, use highest version to reconcile
+	// otherwise, choose the highest compatible version
+
+	// Execute the reconcile procedure
+
+	// Walk ProcedureStatus.Results and add to the CR status
+
+	// if ProcedureStatus.FullyReconciled
+	//   update reconcile version in the CP to match the Procedure version
+	//   use a timed reconcile requeue
+	// else
+	//   requeue immediately
+
+	// ----- old stuff to delete -----
+
 	// Define a new Pod object
 	pod := newPodForCR(instance)
 

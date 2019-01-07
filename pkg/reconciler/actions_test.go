@@ -1,4 +1,4 @@
-package reconcileaction
+package reconciler
 
 import (
 	"errors"
@@ -107,6 +107,7 @@ func TestActionsCacheValues(t *testing.T) {
 	client := fake.NewFakeClient()
 	var scheme *runtime.Scheme
 
+	count = 0
 	countAction.Execute(request, client, scheme)
 	if count != 1 {
 		t.Errorf("execution count should be 1; is %d", count)
