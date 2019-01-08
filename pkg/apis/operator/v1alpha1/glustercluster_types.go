@@ -4,6 +4,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/gluster/anthill/pkg/reconciler"
 )
 
 // GlusterStorageTarget defines a storage target
@@ -60,7 +62,8 @@ type GlusterClusterSpec struct {
 
 // GlusterClusterStatus defines the observed state of GlusterCluster
 type GlusterClusterStatus struct {
-	State string `json:"state,omitempty"`
+	State            string                       `json:"state,omitempty"`
+	ReconcileActions map[string]reconciler.Result `json:"reconcileActions,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
