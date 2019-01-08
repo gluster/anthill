@@ -13,8 +13,8 @@ type Credentials struct {
 
 // GlusterNodeExternal defines external details of gluster nodes
 type GlusterNodeExternal struct {
-	Address string       `json:"address,omitempty"`
-	Creds   *Credentials `json:"credentials,omitempty"`
+	Address     string       `json:"address,omitempty"`
+	Credentials *Credentials `json:"credentials,omitempty"`
 }
 
 // StorageDevice defines storage details of gluster nodes
