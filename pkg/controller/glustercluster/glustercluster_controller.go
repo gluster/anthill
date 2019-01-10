@@ -6,12 +6,9 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -20,14 +17,14 @@ import (
 
 	operatorv1alpha1 "github.com/gluster/anthill/pkg/apis/operator/v1alpha1"
 
+	v0 "github.com/gluster/anthill/pkg/controller/glustercluster/v0"
 	"github.com/gluster/anthill/pkg/reconciler"
-	"github.com/gluster/anthill/pkg/controller/glustercluster/v0"
 )
 
 var (
-	allProcedures reconciler.ProcedureList = []reconciler.Procedure{v0.V0Procedure}
-	log                                    = logf.Log.WithName("controller_glustercluster")
-	reconcileProcedure Procedure
+	log                                         = logf.Log.WithName("controller_glustercluster")
+	allProcedures      reconciler.ProcedureList = []reconciler.Procedure{*v0.V0Procedure}
+	reconcileProcedure *reconciler.Procedure
 )
 
 /**
@@ -106,25 +103,25 @@ func (r *ReconcileGlusterCluster) Reconcile(request reconcile.Request) (reconcil
 	}
 
 	// Get current reconcile version from CR
-	ver,ok := instance.Spec.Options["reconcileVersion"]
+	ver, ok := instance.Spec.Options["reconcileVersion"]
 	if ok {
 		// choose the highest compatible version
-		reconcileProcedure = allProcedures.NewestCompatible(strconv.Atoi(ver))
-	}
-	else{
+		version, _ := strconv.Atoi(ver)
+		reconcileProcedure, _ = allProcedures.NewestCompatible(version)
+	} else {
 		// If no current version, use highest version to reconcile
-		reconcileProcedure = allProcedures.Newest()
+		reconcileProcedure, _ = allProcedures.Newest()
 	}
 
 	// Execute the reconcile procedure. Not sure how to handle the error
-	procudureStatus := reconcileProcedure.Execute(request, r.client, r.scheme)
+	procedureStatus, _ := reconcileProcedure.Execute(request, r.client, r.scheme)
 	// Walk ProcedureStatus.Results and add to the CR status
-	for _ , result := range procedureStatus.Results {
+	for _, result := range procedureStatus.Results {
 		instance.Status.ReconcileActions[result.Name] = result.Result
 	}
-	
-	err := r.client.Status().Update(context.TODO(),instance)
-	if err != nil{
+
+	err = r.client.Status().Update(context.TODO(), instance)
+	if err != nil {
 		return reconcile.Result{}, err
 	}
 	// if ProcedureStatus.FullyReconciled
@@ -132,7 +129,7 @@ func (r *ReconcileGlusterCluster) Reconcile(request reconcile.Request) (reconcil
 	//   use a timed reconcile requeue //left this part out. Why requeue?
 	if procedureStatus.FullyReconciled {
 		instance.Spec.Options["reconcileVersion"] = strconv.Itoa(reconcileProcedure.Version())
-		err := r.client.Update(context.TODO(),instance)
+		err := r.client.Update(context.TODO(), instance)
 		if err != nil {
 			if errors.IsNotFound(err) {
 				// Request object not found, could have been deleted after reconcile request.
@@ -143,13 +140,10 @@ func (r *ReconcileGlusterCluster) Reconcile(request reconcile.Request) (reconcil
 			// Error reading the object - requeue the request.
 			return reconcile.Result{}, err
 		}
-	}
-	else {
+	} else {
 		//   requeue immediately
 		return reconcile.Result{Requeue: true}, nil
 	}
-
-
 
 	return reconcile.Result{}, nil
 }

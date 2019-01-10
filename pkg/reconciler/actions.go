@@ -37,6 +37,15 @@ type Action struct {
 	lastError error
 }
 
+//NewAction is a constructor for Action.
+func NewAction(Name string, prereqs []*Action, action func(reconcile.Request, client.Client, *runtime.Scheme) (Result, error)) *Action {
+	return &Action{
+		Name:    Name,
+		prereqs: prereqs,
+		action:  action,
+	}
+}
+
 // Execute or return a previously cached result of the Action, checking prereqs first
 func (ra *Action) Execute(request reconcile.Request, client client.Client, scheme *runtime.Scheme) (Result, error) {
 	// If we have executed before, return the cached result

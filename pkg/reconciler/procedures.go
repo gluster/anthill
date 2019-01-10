@@ -60,6 +60,15 @@ type Procedure struct {
 	actions    []*Action
 }
 
+// NewProcedure is a constructor for Procedure
+func NewProcedure(minVersion, version int, actions []*Action) *Procedure {
+	return &Procedure{
+		minVersion: minVersion,
+		version:    version,
+		actions:    actions,
+	}
+}
+
 // Version is the reconciler version implemented by this Procedure
 func (p *Procedure) Version() int {
 	return p.version

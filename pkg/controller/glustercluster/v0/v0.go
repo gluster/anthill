@@ -8,11 +8,17 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-var V0Procedure = reconciler.Procedure{ //not happy with this name
-	minVersion: 0,
-	version:    0,
-	actions:    []*reconciler.Action{&exampleAction},
-}
+// Procedure versioin 0
+var V0Procedure = reconciler.NewProcedure( //not happy with this name
+	0,
+	0,
+	[]*reconciler.Action{
+		EtcdClusterCreated,
+		GlusterFuseProvisionerDeployed,
+		GlusterFuseAttachedDeployed,
+		GlusterFuseNodeDeployed,
+	},
+)
 
 /* action candidates --- (need a naming convention)
 //action => prereq => prereq
@@ -26,21 +32,51 @@ nodePool => nodeSVC => nodeCR => nodeCRD
 */
 
 //procedure level actions
+var EtcdClusterCreated = reconciler.NewAction(
+	"EtcdClusterCreated",
+	[]*reconciler.Action{
+		ExamplePrereqAction,
+	},
+	func(request reconcile.Request, client client.Client, scheme *runtime.Scheme) (reconciler.Result, error) {
+		return reconciler.Result{Status: corev1.ConditionTrue, Message: "it's true"}, nil
+	},
+)
 
-var ExampleAction = reconciler.Action{
-	Name: "etcdExposed",
-	action: func(request reconcile.Request, client client.Client, scheme *runtime.Scheme) (Result, error) {
-		return Result{Status: corev1.ConditionTrue, Message: "it's true"}, nil
+var GlusterFuseProvisionerDeployed = reconciler.NewAction(
+	"GlusterFuseProvisionerDeployed",
+	[]*reconciler.Action{
+		ExamplePrereqAction,
 	},
-	prereqs: []Action{
-		examplePrereqAction,
+	func(request reconcile.Request, client client.Client, scheme *runtime.Scheme) (reconciler.Result, error) {
+		return reconciler.Result{Status: corev1.ConditionTrue, Message: "it's true"}, nil
 	},
-}
+)
+
+var GlusterFuseAttachedDeployed = reconciler.NewAction(
+	"GlusterFuseAttachedDeployed",
+	[]*reconciler.Action{
+		ExamplePrereqAction,
+	},
+	func(request reconcile.Request, client client.Client, scheme *runtime.Scheme) (reconciler.Result, error) {
+		return reconciler.Result{Status: corev1.ConditionTrue, Message: "it's true"}, nil
+	},
+)
+
+var GlusterFuseNodeDeployed = reconciler.NewAction(
+	"GlusterFuseNodeDeployed",
+	[]*reconciler.Action{
+		ExamplePrereqAction,
+	},
+	func(request reconcile.Request, client client.Client, scheme *runtime.Scheme) (reconciler.Result, error) {
+		return reconciler.Result{Status: corev1.ConditionTrue, Message: "it's true"}, nil
+	},
+)
 
 //prereq level actions
-var ExamplePrereqAction = reconciler.Action{
-	Name: "resourceFound",
-	action: func(request reconcile.Request, client client.Client, scheme *runtime.Scheme) (Result, error) {
-		return Result{Status: corev1.ConditionTrue, Message: "it's true"}, nil
+var ExamplePrereqAction = reconciler.NewAction(
+	"ExamplePrereqAction",
+	[]*reconciler.Action{},
+	func(request reconcile.Request, client client.Client, scheme *runtime.Scheme) (reconciler.Result, error) {
+		return reconciler.Result{Status: corev1.ConditionTrue, Message: "it's true"}, nil
 	},
-}
+)
