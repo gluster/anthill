@@ -1,4 +1,4 @@
-package v0
+package glustercluster
 
 import (
 	"github.com/gluster/anthill/pkg/reconciler"
@@ -9,7 +9,7 @@ import (
 )
 
 // Procedure versioin 0
-var V0Procedure = reconciler.NewProcedure( //not happy with this name
+var ProcedureV1 = reconciler.NewProcedure( //not happy with this name
 	0,
 	0,
 	[]*reconciler.Action{
