@@ -8,73 +8,41 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-// Procedure versioin 0
-var ProcedureV1 = reconciler.NewProcedure( //not happy with this name
+// ProcedureV1 is Procedure version 1
+var ProcedureV1 = reconciler.NewProcedure(
 	0,
 	0,
 	[]*reconciler.Action{
 		EtcdClusterCreated,
 		GlusterFuseProvisionerDeployed,
-		GlusterFuseAttachedDeployed,
+		GlusterFuseAttacherDeployed,
 		GlusterFuseNodeDeployed,
 	},
 )
 
-/* action candidates --- (need a naming convention)
-//action => prereq => prereq
+//Move the definitions below out to their own files when implementing them.
 
-// I can only think of a procedure with a single action
-// since procedureList doesn't preserve order.
-nodePool => nodeSVC => nodeCR => nodeCRD
-							  => etcdCluster => etcdCRD
-
-
-*/
-
-//procedure level actions
-var EtcdClusterCreated = reconciler.NewAction(
-	"EtcdClusterCreated",
-	[]*reconciler.Action{
-		ExamplePrereqAction,
-	},
-	func(request reconcile.Request, client client.Client, scheme *runtime.Scheme) (reconciler.Result, error) {
-		return reconciler.Result{Status: corev1.ConditionTrue, Message: "it's true"}, nil
-	},
-)
-
+//GlusterFuseProvisionerDeployed deploys the GlusterFuseProvisioner
 var GlusterFuseProvisionerDeployed = reconciler.NewAction(
 	"GlusterFuseProvisionerDeployed",
-	[]*reconciler.Action{
-		ExamplePrereqAction,
-	},
+	[]*reconciler.Action{},
 	func(request reconcile.Request, client client.Client, scheme *runtime.Scheme) (reconciler.Result, error) {
 		return reconciler.Result{Status: corev1.ConditionTrue, Message: "it's true"}, nil
 	},
 )
 
-var GlusterFuseAttachedDeployed = reconciler.NewAction(
+//GlusterFuseAttacherDeployed deploys the GlusterFuseAttacher
+var GlusterFuseAttacherDeployed = reconciler.NewAction(
 	"GlusterFuseAttachedDeployed",
-	[]*reconciler.Action{
-		ExamplePrereqAction,
-	},
+	[]*reconciler.Action{},
 	func(request reconcile.Request, client client.Client, scheme *runtime.Scheme) (reconciler.Result, error) {
 		return reconciler.Result{Status: corev1.ConditionTrue, Message: "it's true"}, nil
 	},
 )
 
+//GlusterFuseNodeDeployed deployes the GlusterFuseNode
 var GlusterFuseNodeDeployed = reconciler.NewAction(
 	"GlusterFuseNodeDeployed",
-	[]*reconciler.Action{
-		ExamplePrereqAction,
-	},
-	func(request reconcile.Request, client client.Client, scheme *runtime.Scheme) (reconciler.Result, error) {
-		return reconciler.Result{Status: corev1.ConditionTrue, Message: "it's true"}, nil
-	},
-)
-
-//prereq level actions
-var ExamplePrereqAction = reconciler.NewAction(
-	"ExamplePrereqAction",
 	[]*reconciler.Action{},
 	func(request reconcile.Request, client client.Client, scheme *runtime.Scheme) (reconciler.Result, error) {
 		return reconciler.Result{Status: corev1.ConditionTrue, Message: "it's true"}, nil

@@ -2,7 +2,6 @@ package glustercluster
 
 import (
 	"context"
-	"strconv"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -26,7 +25,6 @@ var (
 // Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
-
 func (r *ReconcileGlusterCluster) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	reqLogger.Info("Reconciling GlusterCluster")
@@ -47,30 +45,32 @@ func (r *ReconcileGlusterCluster) Reconcile(request reconcile.Request) (reconcil
 
 	// Get current reconcile version from CR
 	version := instance.Status.ReconcileVersion
-	if version == 0 {
+	if version == nil {
 		// choose the highest compatible version
-		reconcileProcedure, _ = allProcedures.NewestCompatible(version)
+		reconcileProcedure, _ = allProcedures.Newest()
 	} else {
 		// If no current version, use highest version to reconcile
-		reconcileProcedure, _ = allProcedures.Newest()
+		reconcileProcedure, _ = allProcedures.NewestCompatible(*version)
 	}
 
 	// Execute the reconcile procedure. Not sure how to handle the error
-	procedureStatus, _ := reconcileProcedure.Execute(request, r.client, r.scheme)
-	// Walk ProcedureStatus.Results and add to the CR status
-	for _, result := range procedureStatus.Results {
-		instance.Status.ReconcileActions[result.Name] = result.Result
-	}
-
-	err = r.client.Status().Update(context.TODO(), instance)
+	procedureStatus, err := reconcileProcedure.Execute(request, r.client, r.scheme)
 	if err != nil {
-		return reconcile.Result{}, err
+		log.Error(err, "Failed to execute procedure.")
+		return reconcile.Result{RequeueAfter: 3e+10}, err
 	}
+	// Walk ProcedureStatus.Results and add to the CR status
+	reconcileActionStatus := make(map[string]reconciler.Result)
+	for _, result := range procedureStatus.Results {
+		reconcileActionStatus[result.Name] = result.Result
+	}
+	instance.Status.ReconcileActions = reconcileActionStatus
 	// if ProcedureStatus.FullyReconciled
 	//   update reconcile version in the CR to match the Procedure version
 	//   use a timed reconcile requeue //left this part out. Why requeue?
 	if procedureStatus.FullyReconciled {
-		instance.Spec.Options["reconcileVersion"] = strconv.Itoa(reconcileProcedure.Version())
+		newVersion := reconcileProcedure.Version()
+		instance.Status.ReconcileVersion = &newVersion
 		err := r.client.Update(context.TODO(), instance)
 		if err != nil {
 			if errors.IsNotFound(err) {
@@ -83,7 +83,12 @@ func (r *ReconcileGlusterCluster) Reconcile(request reconcile.Request) (reconcil
 			return reconcile.Result{}, err
 		}
 	} else {
-		//   requeue immediately
+		err = r.client.Update(context.TODO(), instance)
+		if err != nil {
+
+			return reconcile.Result{}, err
+		}
+		//requeue immediately
 		return reconcile.Result{Requeue: true}, nil
 	}
 

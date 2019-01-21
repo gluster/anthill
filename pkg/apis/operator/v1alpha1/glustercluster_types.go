@@ -63,7 +63,7 @@ type GlusterClusterSpec struct {
 // GlusterClusterStatus defines the observed state of GlusterCluster
 type GlusterClusterStatus struct {
 	State            string                       `json:"state,omitempty"`
-	ReconcileVersion int                          `json:"reconcileVersion,omitempty"`
+	ReconcileVersion *int                         `json:"reconcileVersion,omitempty"`
 	ReconcileActions map[string]reconciler.Result `json:"reconcileActions,omitempty"`
 }
 
