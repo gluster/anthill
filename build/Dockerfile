@@ -1,4 +1,4 @@
-FROM docker.io/centos:7.5.1804
+FROM docker.io/centos:7
 RUN yum update -y \
     && yum clean all
 
