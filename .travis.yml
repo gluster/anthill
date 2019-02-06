@@ -13,7 +13,7 @@ addons:
 
 env:
   global:
-    - GO_METALINTER_VERSION="v2.0.11"
+    - GO_METALINTER_VERSION="v3.0.0"
     - OPERATOR_SDK_URL="https://github.com/operator-framework/operator-sdk/releases/download/v0.3.0/operator-sdk-v0.3.0-x86_64-linux-gnu"
     - CONTAINER_REPO="gluster/anthill"
 
@@ -47,7 +47,7 @@ jobs:
           --sort path --sort line --sort column
           --deadline=24h --enable="gofmt" --vendor --debug
           --exclude="zz_generated.deepcopy.go" ./...
-          |& stdbuf -oL grep "linter took\\|:warning:\\|:error:"
+          |& stdbuf -oL awk '/linter took/ || !/^DEBUG/ || /nolint:/'
         - ./build.sh "${CONTAINER_REPO}"
       deploy:
         # Master branch will push the container to :latest
