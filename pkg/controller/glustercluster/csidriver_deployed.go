@@ -16,7 +16,6 @@ var glusterFuseProvisionerDeployed = reconciler.NewAction(
 	},
 )
 
-//GlusterFuseAttacherDeployed deploys the GlusterFuseAttacher
 var glusterFuseAttacherDeployed = reconciler.NewAction(
 	"glusterFuseAttachedDeployed",
 	[]*reconciler.Action{},
@@ -25,11 +24,19 @@ var glusterFuseAttacherDeployed = reconciler.NewAction(
 	},
 )
 
-//GlusterFuseNodeDeployed deployes the GlusterFuseNode
 var glusterFuseNodeDeployed = reconciler.NewAction(
 	"glusterFuseNodeDeployed",
 	[]*reconciler.Action{},
 	func(request reconcile.Request, client client.Client, scheme *runtime.Scheme) (reconciler.Result, error) {
+		return reconciler.Result{Status: corev1.ConditionTrue, Message: "it's true"}, nil
+	},
+)
+
+var serviceAccountDeployed = reconciler.NewAction(
+	"serviceAccountDeployed",
+	[]*reconciler.Action{},
+	func(request reconcile.Request, client client.Client, scheme *runtime.Scheme) (reconciler.Result, error) {
+
 		return reconciler.Result{Status: corev1.ConditionTrue, Message: "it's true"}, nil
 	},
 )

@@ -1,4 +1,4 @@
-package glustercluster
+package glusternode
 
 import (
 	"context"
@@ -13,24 +13,23 @@ import (
 )
 
 var (
-	log                                         = logf.Log.WithName("controller_glustercluster")
+	log                                         = logf.Log.WithName("controller_glusternode")
 	allProcedures      reconciler.ProcedureList = []reconciler.Procedure{*ProcedureV1}
 	reconcileProcedure *reconciler.Procedure
 )
 
-// Reconcile reads that state of the cluster for a GlusterCluster object and makes changes based on the state read
-// and what is in the GlusterCluster.Spec
-// TODO(user): Modify this Reconcile function to implement your Controller logic.  This example creates
-// a Pod as an example
+// Reconcile reads that state of the node for a GlusterNode object and makes changes based on the state read
+// and what is in the GlusterNode.Spec
+
 // Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
-func (r *ReconcileGlusterCluster) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (r *ReconcileGlusterNode) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	reqLogger.Info("Reconciling GlusterCluster")
+	reqLogger.Info("Reconciling GlusterNode")
 
-	// Fetch the GlusterCluster instance
-	instance := &operatorv1alpha1.GlusterCluster{}
+	// Fetch the GlusterNode instance
+	instance := &operatorv1alpha1.GlusterNode{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -67,7 +66,7 @@ func (r *ReconcileGlusterCluster) Reconcile(request reconcile.Request) (reconcil
 	instance.Status.ReconcileActions = reconcileActionStatus
 	// if ProcedureStatus.FullyReconciled
 	//   update reconcile version in the CR to match the Procedure version
-	//   use a timed reconcile requeue //left this part out. Why requeue?
+
 	if procedureStatus.FullyReconciled {
 		newVersion := reconcileProcedure.Version()
 		instance.Status.ReconcileVersion = &newVersion

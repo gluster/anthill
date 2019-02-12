@@ -13,5 +13,6 @@ var ProcedureV1 = reconciler.NewProcedure(
 		glusterFuseProvisionerDeployed,
 		glusterFuseAttacherDeployed,
 		glusterFuseNodeDeployed,
+		glusterNodesCreated,
 	},
 )

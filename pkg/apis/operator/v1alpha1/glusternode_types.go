@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	"github.com/gluster/anthill/pkg/reconciler"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -36,7 +37,9 @@ type GlusterNodeSpec struct {
 
 // GlusterNodeStatus defines the observed state of GlusterNode
 type GlusterNodeStatus struct {
-	State string `json:"currentState,omitempty"`
+	State            string                       `json:"currentState,omitempty"`
+	ReconcileVersion *int                         `json:"reconcileVersion,omitempty"`
+	ReconcileActions map[string]reconciler.Result `json:"reconcileActions,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
