@@ -8,19 +8,26 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-//EtcdClusterCreatedV1 reconciles the cluster's etcd cluster
-var EtcdClusterCreated = reconciler.NewAction(
-	"EtcdClusterCreated",
-	[]*reconciler.Action{
-		etcdCRDExists,
-	},
+var glusterFuseProvisionerDeployed = reconciler.NewAction(
+	"glusterFuseProvisionerDeployed",
+	[]*reconciler.Action{},
 	func(request reconcile.Request, client client.Client, scheme *runtime.Scheme) (reconciler.Result, error) {
 		return reconciler.Result{Status: corev1.ConditionTrue, Message: "it's true"}, nil
 	},
 )
 
-var etcdCRDExists = reconciler.NewAction(
-	"etcdCRDExists",
+//GlusterFuseAttacherDeployed deploys the GlusterFuseAttacher
+var glusterFuseAttacherDeployed = reconciler.NewAction(
+	"glusterFuseAttachedDeployed",
+	[]*reconciler.Action{},
+	func(request reconcile.Request, client client.Client, scheme *runtime.Scheme) (reconciler.Result, error) {
+		return reconciler.Result{Status: corev1.ConditionTrue, Message: "it's true"}, nil
+	},
+)
+
+//GlusterFuseNodeDeployed deployes the GlusterFuseNode
+var glusterFuseNodeDeployed = reconciler.NewAction(
+	"glusterFuseNodeDeployed",
 	[]*reconciler.Action{},
 	func(request reconcile.Request, client client.Client, scheme *runtime.Scheme) (reconciler.Result, error) {
 		return reconciler.Result{Status: corev1.ConditionTrue, Message: "it's true"}, nil
