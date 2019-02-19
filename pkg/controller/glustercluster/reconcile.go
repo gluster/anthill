@@ -16,12 +16,12 @@ var (
 	log                                         = logf.Log.WithName("controller_glustercluster")
 	allProcedures      reconciler.ProcedureList = []reconciler.Procedure{*ProcedureV1}
 	reconcileProcedure *reconciler.Procedure
+	err                error
+	procedureStatus    *reconciler.ProcedureStatus
 )
 
 // Reconcile reads that state of the cluster for a GlusterCluster object and makes changes based on the state read
 // and what is in the GlusterCluster.Spec
-// TODO(user): Modify this Reconcile function to implement your Controller logic.  This example creates
-// a Pod as an example
 // Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
@@ -31,7 +31,7 @@ func (r *ReconcileGlusterCluster) Reconcile(request reconcile.Request) (reconcil
 
 	// Fetch the GlusterCluster instance
 	instance := &operatorv1alpha1.GlusterCluster{}
-	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
+	err = r.client.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
@@ -54,7 +54,7 @@ func (r *ReconcileGlusterCluster) Reconcile(request reconcile.Request) (reconcil
 	}
 
 	// Execute the reconcile procedure. Not sure how to handle the error
-	procedureStatus, err := reconcileProcedure.Execute(request, r.client, r.scheme)
+	procedureStatus, err = reconcileProcedure.Execute(request, r.client, r.scheme)
 	if err != nil {
 		log.Error(err, "Failed to execute procedure.")
 		return reconcile.Result{}, err
@@ -65,26 +65,8 @@ func (r *ReconcileGlusterCluster) Reconcile(request reconcile.Request) (reconcil
 		reconcileActionStatus[result.Name] = result.Result
 	}
 	instance.Status.ReconcileActions = reconcileActionStatus
-	// if ProcedureStatus.FullyReconciled
-	//   update reconcile version in the CR to match the Procedure version
-	//   use a timed reconcile requeue //left this part out. Why requeue?
-	if procedureStatus.FullyReconciled {
-		newVersion := reconcileProcedure.Version()
-		instance.Status.ReconcileVersion = &newVersion
-		err := r.client.Update(context.TODO(), instance)
-		if err != nil {
-			if errors.IsNotFound(err) {
-				// Request object not found, could have been deleted after reconcile request.
-				// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
-				// Return and don't requeue
-				return reconcile.Result{}, nil
-			}
-			// Error reading the object - requeue the request.
-			return reconcile.Result{}, err
-		}
-		// use a timed reconcile requeue //TODO: implement backoff
-		return reconcile.Result{RequeueAfter: 3e+10}, nil
-	} else {
+
+	if !procedureStatus.FullyReconciled {
 		err = r.client.Update(context.TODO(), instance)
 		if err != nil {
 
@@ -93,5 +75,23 @@ func (r *ReconcileGlusterCluster) Reconcile(request reconcile.Request) (reconcil
 		//requeue immediately
 		return reconcile.Result{Requeue: true}, nil
 	}
+	// if ProcedureStatus.FullyReconciled
+	//   update reconcile version in the CR to match the Procedure version
+	//   use a timed reconcile requeue //left this part out. Why requeue?
+	newVersion := reconcileProcedure.Version()
+	instance.Status.ReconcileVersion = &newVersion
+	err = r.client.Update(context.TODO(), instance)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			// Request object not found, could have been deleted after reconcile request.
+			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
+			// Return and don't requeue
+			return reconcile.Result{}, nil
+		}
+		// Error reading the object - requeue the request.
+		return reconcile.Result{}, err
+	}
+	// use a timed reconcile requeue //TODO: implement backoff
+	return reconcile.Result{RequeueAfter: 3e+10}, nil
 
 }

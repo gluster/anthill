@@ -16,6 +16,8 @@ var (
 	log                                         = logf.Log.WithName("controller_glusternode")
 	allProcedures      reconciler.ProcedureList = []reconciler.Procedure{*ProcedureV1}
 	reconcileProcedure *reconciler.Procedure
+	err                error
+	procedureStatus    *reconciler.ProcedureStatus
 )
 
 // Reconcile reads that state of the node for a GlusterNode object and makes changes based on the state read
@@ -30,7 +32,7 @@ func (r *ReconcileGlusterNode) Reconcile(request reconcile.Request) (reconcile.R
 
 	// Fetch the GlusterNode instance
 	instance := &operatorv1alpha1.GlusterNode{}
-	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
+	err = r.client.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
@@ -53,7 +55,7 @@ func (r *ReconcileGlusterNode) Reconcile(request reconcile.Request) (reconcile.R
 	}
 
 	// Execute the reconcile procedure. Not sure how to handle the error
-	procedureStatus, err := reconcileProcedure.Execute(request, r.client, r.scheme)
+	procedureStatus, err = reconcileProcedure.Execute(request, r.client, r.scheme)
 	if err != nil {
 		log.Error(err, "Failed to execute procedure.")
 		return reconcile.Result{}, err
@@ -70,7 +72,7 @@ func (r *ReconcileGlusterNode) Reconcile(request reconcile.Request) (reconcile.R
 	if procedureStatus.FullyReconciled {
 		newVersion := reconcileProcedure.Version()
 		instance.Status.ReconcileVersion = &newVersion
-		err := r.client.Update(context.TODO(), instance)
+		err = r.client.Update(context.TODO(), instance)
 		if err != nil {
 			if errors.IsNotFound(err) {
 				// Request object not found, could have been deleted after reconcile request.
