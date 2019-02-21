@@ -45,13 +45,19 @@ func (r *ReconcileGlusterNode) Reconcile(request reconcile.Request) (reconcile.R
 	}
 
 	// Get current reconcile version from CR
-	version := instance.Status.ReconcileVersion
+	version := instance.Spec.ReconcileVersion
 	if version == nil {
 		// choose the highest compatible version
-		reconcileProcedure, _ = allProcedures.Newest()
+		reconcileProcedure, err = allProcedures.Newest()
+		if err != nil {
+			log.Error(err, "Failed to get newest reconcile procedure.")
+		}
 	} else {
 		// If no current version, use highest version to reconcile
-		reconcileProcedure, _ = allProcedures.NewestCompatible(*version)
+		reconcileProcedure, err = allProcedures.NewestCompatible(*version)
+		if err != nil {
+			log.Error(err, "Failed to get newest compatible reconcile procedure.")
+		}
 	}
 
 	// Execute the reconcile procedure. Not sure how to handle the error
@@ -70,8 +76,6 @@ func (r *ReconcileGlusterNode) Reconcile(request reconcile.Request) (reconcile.R
 	//   update reconcile version in the CR to match the Procedure version
 
 	if procedureStatus.FullyReconciled {
-		newVersion := reconcileProcedure.Version()
-		instance.Status.ReconcileVersion = &newVersion
 		err = r.client.Update(context.TODO(), instance)
 		if err != nil {
 			if errors.IsNotFound(err) {

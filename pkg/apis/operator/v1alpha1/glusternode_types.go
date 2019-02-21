@@ -27,18 +27,18 @@ type StorageDevice struct {
 
 // GlusterNodeSpec defines the desired state of GlusterNode
 type GlusterNodeSpec struct {
-	Cluster      string               `json:"cluster,omitempty"`
-	Zone         string               `json:"zone,omitempty"`
-	DesiredState string               `json:"desiredState,omitempty"`
-	ExternalInfo *GlusterNodeExternal `json:"external,omitempty"`
-	Storage      []StorageDevice      `json:"storage"`
-	Affinity     *corev1.NodeAffinity `json:"nodeAffinity,omitempty"`
+	Cluster          string               `json:"cluster,omitempty"`
+	ReconcileVersion *int                 `json:"reconcileVersion,omitempty"`
+	Zone             string               `json:"zone,omitempty"`
+	DesiredState     string               `json:"desiredState,omitempty"`
+	ExternalInfo     *GlusterNodeExternal `json:"external,omitempty"`
+	Storage          []StorageDevice      `json:"storage"`
+	Affinity         *corev1.NodeAffinity `json:"nodeAffinity,omitempty"`
 }
 
 // GlusterNodeStatus defines the observed state of GlusterNode
 type GlusterNodeStatus struct {
 	State            string                       `json:"currentState,omitempty"`
-	ReconcileVersion *int                         `json:"reconcileVersion,omitempty"`
 	ReconcileActions map[string]reconciler.Result `json:"reconcileActions,omitempty"`
 }
 
