@@ -22,7 +22,6 @@ var (
 
 // Reconcile reads that state of the node for a GlusterNode object and makes changes based on the state read
 // and what is in the GlusterNode.Spec
-
 // Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
@@ -89,14 +88,13 @@ func (r *ReconcileGlusterNode) Reconcile(request reconcile.Request) (reconcile.R
 		}
 		// use a timed reconcile requeue //TODO: implement backoff
 		return reconcile.Result{RequeueAfter: 3e+10}, nil
-	} else {
-		err = r.client.Update(context.TODO(), instance)
-		if err != nil {
-
-			return reconcile.Result{}, err
-		}
-		//requeue immediately
-		return reconcile.Result{Requeue: true}, nil
 	}
+	err = r.client.Update(context.TODO(), instance)
+	if err != nil {
+
+		return reconcile.Result{}, err
+	}
+	//requeue immediately
+	return reconcile.Result{Requeue: true}, nil
 
 }

@@ -54,12 +54,3 @@ var glusterFuseNodeDeployed = reconciler.NewAction(
 		return reconciler.Result{Status: corev1.ConditionTrue, Message: "it's true"}, nil
 	},
 )
-
-var serviceAccountDeployed = reconciler.NewAction(
-	"serviceAccountDeployed",
-	[]*reconciler.Action{},
-	func(request reconcile.Request, client client.Client, scheme *runtime.Scheme) (reconciler.Result, error) {
-
-		return reconciler.Result{Status: corev1.ConditionTrue, Message: "it's true"}, nil
-	},
-)
