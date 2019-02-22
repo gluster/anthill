@@ -138,8 +138,9 @@ func TestEmptyListReturnsError(t *testing.T) {
 	if _, err := empty.Newest(); err == nil {
 		t.Error("Newest() should have returned an error")
 	}
-
-	if _, err := empty.NewestCompatible(5); err == nil {
+	version := new(int)
+	*version = 5
+	if _, err := empty.NewestCompatible(version); err == nil {
 		t.Error("NewestCompatible() should have returned an error")
 	}
 }
@@ -157,7 +158,9 @@ func TestNewestReturnsHighestVersion(t *testing.T) {
 
 func TestNewestCompatible(t *testing.T) {
 	expected := 7
-	p, err := pl.NewestCompatible(4)
+	version := new(int)
+	*version = 4
+	p, err := pl.NewestCompatible(version)
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
@@ -168,7 +171,8 @@ func TestNewestCompatible(t *testing.T) {
 	// All versions are compatible w/ v7, so we should get back the highest
 	// (9)
 	expected = 9
-	p, err = pl.NewestCompatible(7)
+	*version = 7
+	p, err = pl.NewestCompatible(version)
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
@@ -177,7 +181,8 @@ func TestNewestCompatible(t *testing.T) {
 	}
 
 	// Nothing is compatible w/ v1
-	if _, err = pl.NewestCompatible(1); err == nil {
+	*version = 1
+	if _, err = pl.NewestCompatible(version); err == nil {
 		t.Error("NewestCompatible() should have returned an error")
 	}
 }

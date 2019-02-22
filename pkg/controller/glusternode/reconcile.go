@@ -45,21 +45,13 @@ func (r *ReconcileGlusterNode) Reconcile(request reconcile.Request) (reconcile.R
 
 	// Get current reconcile version from CR
 	version := instance.Spec.ReconcileVersion
-	if version == nil {
-		// choose the highest compatible version
-		reconcileProcedure, err = allProcedures.Newest()
-		if err != nil {
-			log.Error(err, "Failed to get newest reconcile procedure.")
-		}
-	} else {
-		// If no current version, use highest version to reconcile
-		reconcileProcedure, err = allProcedures.NewestCompatible(*version)
-		if err != nil {
-			log.Error(err, "Failed to get newest compatible reconcile procedure.")
-		}
+	reconcileProcedure, err = allProcedures.NewestCompatible(version)
+	if err != nil {
+		log.Error(err, "Failed to find a compatible reconcile procedure.")
+		return reconcile.Result{}, err
 	}
 
-	// Execute the reconcile procedure. Not sure how to handle the error
+	// Execute the reconcile procedure.
 	procedureStatus, err = reconcileProcedure.Execute(request, r.client, r.scheme)
 	if err != nil {
 		log.Error(err, "Failed to execute procedure.")
@@ -71,11 +63,11 @@ func (r *ReconcileGlusterNode) Reconcile(request reconcile.Request) (reconcile.R
 		reconcileActionStatus[result.Name] = result.Result
 	}
 	instance.Status.ReconcileActions = reconcileActionStatus
+
 	// if ProcedureStatus.FullyReconciled
 	//   update reconcile version in the CR to match the Procedure version
-
+	err = r.client.Update(context.TODO(), instance)
 	if procedureStatus.FullyReconciled {
-		err = r.client.Update(context.TODO(), instance)
 		if err != nil {
 			if errors.IsNotFound(err) {
 				// Request object not found, could have been deleted after reconcile request.
@@ -89,11 +81,7 @@ func (r *ReconcileGlusterNode) Reconcile(request reconcile.Request) (reconcile.R
 		// use a timed reconcile requeue //TODO: implement backoff
 		return reconcile.Result{RequeueAfter: 3e+10}, nil
 	}
-	err = r.client.Update(context.TODO(), instance)
-	if err != nil {
 
-		return reconcile.Result{}, err
-	}
 	//requeue immediately
 	return reconcile.Result{Requeue: true}, nil
 
