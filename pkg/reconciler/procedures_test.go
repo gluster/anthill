@@ -185,4 +185,16 @@ func TestNewestCompatible(t *testing.T) {
 	if _, err = pl.NewestCompatible(version); err == nil {
 		t.Error("NewestCompatible() should have returned an error")
 	}
+
+	// nil version should return the Newest
+	version = nil
+	expected = 9
+	p, err = pl.NewestCompatible(version)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	if p.Version() != expected {
+		t.Errorf("expected version %d, got version %d", expected, p.Version())
+	}
+
 }
