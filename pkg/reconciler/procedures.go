@@ -30,9 +30,12 @@ func (pl ProcedureList) Newest() (*Procedure, error) {
 	return &p, nil
 }
 
-// NewestCompatible returns the newest Procedure that is compatible with the
-// provided currentVersion
-func (pl ProcedureList) NewestCompatible(currentVersion int) (*Procedure, error) {
+// NewestCompatible returns the newest Procedure compatible to *version
+// or the newest available one if version is nil.
+func (pl ProcedureList) NewestCompatible(currentVersion *int) (*Procedure, error) {
+	if currentVersion == nil {
+		return pl.Newest()
+	}
 	if len(pl) < 1 {
 		return nil, errors.New("empty list of reconcile procedures")
 	}
@@ -44,12 +47,12 @@ func (pl ProcedureList) NewestCompatible(currentVersion int) (*Procedure, error)
 
 	// Walk list to find the first that is compatible w/ the currentVersion
 	for _, p := range pl {
-		if p.MinVersion() <= currentVersion {
+		if p.MinVersion() <= *currentVersion {
 			return &p, nil
 		}
 	}
 
-	return nil, fmt.Errorf("no procedures are compatible with deployed version %d", currentVersion)
+	return nil, fmt.Errorf("no procedures are compatible with deployed version %d", *currentVersion)
 }
 
 // Procedure defines the complete "procedure" (the set of Action) necessary to
@@ -58,6 +61,15 @@ type Procedure struct {
 	minVersion int
 	version    int
 	actions    []*Action
+}
+
+// NewProcedure is a constructor for Procedure
+func NewProcedure(minVersion, version int, actions []*Action) *Procedure {
+	return &Procedure{
+		minVersion: minVersion,
+		version:    version,
+		actions:    actions,
+	}
 }
 
 // Version is the reconciler version implemented by this Procedure
