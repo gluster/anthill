@@ -1,0 +1,55 @@
+# dot -Tpng -O <this_file>
+
+digraph GlusterCluster {
+  label="GlusterCluster Procedure";
+  nodesep=0.5;
+  rankdir=LR;
+  fontame="helvetica";
+  edge [ dir=forward fontname="helvetica" ];
+  node [ fontname="helvetica" ];
+  style=solid
+  graph [ style="dotted" ]
+
+  subgraph cluster_ProcedureLevel {
+    //All nodes will this shape and colour
+    node [ shape=rect ]
+    label="Procedure Level actions"
+    rank=same
+
+    etcdClusterReconciled
+    csiAttacherReconciled
+    csiNodePluginReconciled
+    csiProvisionerReconciled
+    glusterClusterServicesReconciled->glusterNodesReconciled
+    glusterNodesReconciled->etcdClusterReconciled
+    managedDevicesReconciled
+  }
+
+  subgraph cluster_PrereqLevel {
+    node [ shape=oval ]
+    etcdClusterReconciled->etcdCRDRegistered
+  }
+}
+
+digraph GlusterNode {
+  label="GlusterNode Procedure";
+  nodesep=0.5;
+  rankdir=LR;
+  edge [ dir=forward fontname="helvetica" ];
+  node [ fontname="helvetica" ]
+
+  subgraph cluster_ProcedureLevel {
+    //All nodes will this shape and colour
+    node [ shape=rect ]
+    label="Procedure Level actions"
+    rank=same
+
+    statefulSetReconciled
+  }
+
+  subgraph cluster_PrereqLevel {
+    node [ shape=oval ]
+
+  }
+
+}

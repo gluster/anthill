@@ -1,35 +1,52 @@
-This document describes the actions that have to be executed successfully for both of anthill's CRDs to be consider reconciled.  They are implemented as `reconciler.Action` objects, and are enumerated in a `reconciler.Procedure` object. Procedure level actions are ones that modify state and should have a corresponding entry populated in `.Status.ReconcileActions map[string]reconciler.Result`. Top level actions are executed in an arbitrary order so they must define any prerequisite actions explicitly. An action may be a top-level action and still defined as a prerequisite and the caching implementation will ensure that it is executed only the necessary amount of times(once?).
+This document describes the actions that have to be executed successfully for
+both of anthill's CRDs to be considered reconciled. They are implemented as
+`reconciler.Action` objects, and are enumerated in a `reconciler.Procedure`
+object. Procedure level actions are ones that modify state and should have a
+corresponding entry populated in
+`.Status.ReconcileActions map[string]reconciler.Result`.
+Top level actions are executed in an arbitrary order so they must define any
+prerequisite actions explicitly.
+An action may be a top-level action and still defined as a prerequisite and the
+caching implementation will ensure that it is executed a maximum of once per
+Procedure execution.
 
+# GlusterCluster actions
 
-## GlusterCluster actions
+## etcdClusterReconciled
 
-### etcdClusterReconciled
 prereqs:
- -  [etcdCRDRegistered](#etcdCRDRegistered)
 
-### etcdCRDReistered
+- [etcdCRDRegistered](#etcdCRDRegistered)
 
-### csiAttacherReconciled
+## etcdCRDRegistered
 
-### csiNodePluginReconciled
+## csiAttacherReconciled
 
-### csiProvisionerReconciled
-### glusterClusterServicesReconciled
+## csiNodePluginReconciled
+
+## csiProvisionerReconciled
+
+## glusterClusterServicesReconciled
+
 prereqs:
- -  [glusterNodesReconciled](#glusterNodesReconciled)
-### glusterNodesReconciled
+
+- [glusterNodesReconciled](#glusterNodesReconciled)
+
+## glusterNodesReconciled
+
 prereqs:
- -  [etcdClusterReconciled](#etcdClusterReconciled)
 
+- [etcdClusterReconciled](#etcdClusterReconciled)
 
-## GlusterNode actions
+## managedDevicesReconciled
 
-`GlusterNode` CRs can be created manually or by the `GlusterCluster` Controller according to a `template`. The node is associated with the cluster using the `gluster.org/cluster-name` label that they will both share. `GlusterCluster`s that consume local storage via `hostPath` require their `GlusterNode`s to be created manually and have `nodeAffinity` set in a way that it will only be scheduled on that node.
+- [glusterClusterServicesReconciled](#glusterClusterServicesReconciled)
 
-### statefulSetReconciled
-prereqs:
- -  [managedDevicesReconciled](#managedDevicesReconciled)
-### managedDevicesReconciled
-prereqs:
- -  [glusterClusterServicesReconciled](#glusterClusterServicesReconciled)
+# GlusterNode actions
 
+`GlusterNode` CRs can be created manually or by the `GlusterCluster` Controller
+according to a `template`.`GlusterCluster`s that consume local storage via
+`hostPath` require their `GlusterNode`s to be created manually and have
+`nodeAffinity` set in a way that it will only be scheduled on that node.
+
+## statefulSetReconciled
