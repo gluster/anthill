@@ -12,6 +12,8 @@ Procedure execution.
 
 # GlusterCluster actions
 
+![Action Graph](deploy_procedure.dot.png)
+
 ## etcdClusterReconciled
 
 prereqs:
@@ -43,6 +45,8 @@ prereqs:
 - [glusterClusterServicesReconciled](#glusterClusterServicesReconciled)
 
 # GlusterNode actions
+
+![Action Graph](deploy_procedure.dot.2.png)
 
 `GlusterNode` CRs can be created manually or by the `GlusterCluster` Controller
 according to a `template`.`GlusterCluster`s that consume local storage via

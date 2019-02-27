@@ -27,6 +27,7 @@ digraph GlusterCluster {
 
   subgraph cluster_PrereqLevel {
     node [ shape=oval ]
+    label="Prerequisite actions"
     etcdClusterReconciled->etcdCRDRegistered
   }
 }
@@ -49,6 +50,7 @@ digraph GlusterNode {
 
   subgraph cluster_PrereqLevel {
     node [ shape=oval ]
+    label="Prerequisite actions"
 
   }
 
